@@ -74,7 +74,7 @@ public class ChatMessageController {
         try {
             // Sending the message to kafka topic queue
             ChatMessage savedMessage = chatMessageRepository
-                    .save(new ChatMessage(Uuids.timeBased(), channelId, message.getUsername(), message.getMessage()));
+                    .save(new ChatMessage(Uuids.timeBased(), channelId, message.getSenderId(), message.getMessage()));
             kafkaTemplate.send(KafkaConstants.KAFKA_TOPIC_BASE + "/" + channelId, savedMessage).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);

@@ -51,4 +51,8 @@ public class ChatUserDetails implements UserDetails {
         return true;
     }
 
+    public User getUser() {
+        return user;
+    }
+
 }

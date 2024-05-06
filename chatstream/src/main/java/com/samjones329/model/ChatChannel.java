@@ -22,7 +22,8 @@ public class ChatChannel {
     public ChatChannel() {
     }
 
-    public ChatChannel(UUID serverId, String name) {
+    public ChatChannel(UUID id, UUID serverId, String name) {
+        this.id = id;
         this.serverId = serverId;
         this.name = name;
     }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
@@ -14,7 +15,11 @@ public class ChatServer {
     @PrimaryKey
     private UUID id;
 
+    @Indexed
     private String name;
+
+    @Column("owner_id")
+    private UUID ownerId;
 
     @Column("channel_ids")
     private List<UUID> channelIds;
@@ -31,9 +36,11 @@ public class ChatServer {
         this.memberIds = new ArrayList<>();
     }
 
-    public ChatServer(String name, List<UUID> chatChannelIds, List<UUID> memberIds) {
+    public ChatServer(String name, UUID ownerId, List<UUID> chatChannelIds, List<UUID> memberIds) {
         this.name = name;
+        this.ownerId = ownerId;
         this.channelIds = chatChannelIds;
+        this.memberIds = memberIds;
     }
 
     public UUID getId() {
@@ -50,6 +57,14 @@ public class ChatServer {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public UUID getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
     }
 
     public List<UUID> getChannelIds() {

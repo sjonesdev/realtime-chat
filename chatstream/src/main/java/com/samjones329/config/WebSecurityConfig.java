@@ -14,15 +14,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.SecurityContextRepository;
 
-import com.samjones329.controller.RestAuthEntryPoint;
 import com.samjones329.service.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
-
-    @Autowired
-    RestAuthEntryPoint restAuthEntryPoint;
 
     @Autowired
     SecurityContextRepository securityContextRepository;
@@ -35,10 +31,6 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/", "/register", "/login").permitAll()
                         .anyRequest().authenticated());
-        // .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthEntryPoint))
-        // .formLogin(form -> form.loginProcessingUrl("/login"))
-        // .logout((logout) -> logout.permitAll());
-
         return http.build();
     }
 

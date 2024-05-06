@@ -1,6 +1,7 @@
 package com.samjones329.model;
 
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Indexed;
@@ -12,6 +13,7 @@ public class User {
     @PrimaryKey
     private UUID id;
 
+    @Indexed
     private String username;
 
     @Indexed
@@ -20,14 +22,18 @@ public class User {
     @Column("password_hash")
     private String passwordHash;
 
+    @Column("server_ids")
+    private List<UUID> serverIds;
+
     public User() {
     }
 
-    public User(UUID id, String username, String email, String passwordHash) {
+    public User(UUID id, String username, String email, String passwordHash, List<UUID> serverIds) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.serverIds = serverIds;
     }
 
     public UUID getId() {
@@ -60,5 +66,13 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public List<UUID> getServerIds() {
+        return serverIds;
+    }
+
+    public void setServerIds(List<UUID> serverIds) {
+        this.serverIds = serverIds;
     }
 }

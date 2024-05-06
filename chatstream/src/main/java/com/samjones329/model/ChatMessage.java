@@ -14,9 +14,11 @@ public class ChatMessage {
     private UUID id;
 
     @Indexed
+    @Column("channel_id")
     private UUID channelId;
 
-    private String username;
+    @Column("sender_id")
+    private UUID senderId;
 
     private String message;
 
@@ -26,10 +28,10 @@ public class ChatMessage {
     public ChatMessage() {
     }
 
-    public ChatMessage(UUID id, UUID channelId, String username, String message) {
+    public ChatMessage(UUID id, UUID channelId, UUID senderId, String message) {
         this.id = id;
         this.channelId = channelId;
-        this.username = username;
+        this.senderId = senderId;
         this.message = message;
     }
 
@@ -49,16 +51,16 @@ public class ChatMessage {
         this.channelId = channelId;
     }
 
-    public String getUsername() {
-        return username;
+    public UUID getSenderId() {
+        return senderId;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setSenderId(UUID senderId) {
+        this.senderId = senderId;
     }
 
     public void setMessage(String message) {
