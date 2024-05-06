@@ -23,10 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.model.ChatChannel;
+import com.samjones329.model.ChatMessage;
 import com.samjones329.model.ChatServer;
 import com.samjones329.repository.ChatServerRepository;
 import com.samjones329.service.UserDetailsServiceImpl;
 import com.samjones329.repository.ChatChannelRepository;
+import com.samjones329.repository.ChatMessageRepository;
 
 @CrossOrigin(originPatterns = "*")
 @RestController
@@ -38,6 +40,9 @@ public class ChatServerController {
 
     @Autowired
     ChatChannelRepository channelRepo;
+
+    @Autowired
+    ChatMessageRepository msgRepo;
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -183,6 +188,30 @@ public class ChatServerController {
             return new ResponseEntity<>(savedServer, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error joining server", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/channels/{id}/messages")
+    public ResponseEntity<List<ChatMessage>> getChannelMessages(@CurrentSecurityContext SecurityContext context,
+            @PathVariable UUID id) {
+        try {
+            var channel = channelRepo.findById(id);
+            if (channel.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+
+            var userId = userDetailsService.getDetailsFromContext(context).getUser().getId();
+            var server = serverRepo.findById(channel.get().getServerId()).get();
+            if (!server.getMemberIds().contains(userId)) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            var messages = msgRepo.findByChannelId(id);
+
+            return new ResponseEntity<>(messages, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error getting messages for channel id=" + id, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

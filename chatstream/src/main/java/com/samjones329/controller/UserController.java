@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -56,7 +57,7 @@ public class UserController {
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest userRequest) {
+    public ResponseEntity<SelfResponse> register(@RequestBody RegisterRequest userRequest) {
         try {
             var existingUser = userRepo.findByEmail(userRequest.email());
             if (existingUser.isPresent())
@@ -67,7 +68,7 @@ public class UserController {
                     List.of());
             User savedUser = userRepo.save(user);
             return new ResponseEntity<>(
-                    new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(),
+                    new SelfResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(),
                             savedUser.getServerIds()),
                     HttpStatus.OK);
         } catch (Exception e) {
@@ -77,7 +78,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@CurrentSecurityContext SecurityContext securityContext,
+    public ResponseEntity<SelfResponse> login(@CurrentSecurityContext SecurityContext securityContext,
             @RequestBody LoginRequest loginRequest) {
         try {
             // check user credentials
@@ -100,7 +101,7 @@ public class UserController {
             // return user info
             var user = userRepo.findByEmail(loginRequest.email()).get();
             return new ResponseEntity<>(
-                    new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
+                    new SelfResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
                     HttpStatus.OK);
         } catch (Exception e) {
             if (e instanceof BadCredentialsException) {
@@ -114,17 +115,34 @@ public class UserController {
     public record LoginRequest(String email, String password) {
     }
 
-    public record UserResponse(UUID id, String username, String email, List<UUID> serverIds) {
+    public record SelfResponse(UUID id, String username, String email, List<UUID> serverIds) {
+    }
+
+    public record UserResponse(UUID id, String username) {
     }
 
     @GetMapping("/authentication")
-    public ResponseEntity<Object> getAuthentication(
+    public ResponseEntity<SelfResponse> getAuthentication(
             @CurrentSecurityContext SecurityContext context) {
         var user = userDetailsService.getDetailsFromContext(context).getUser();
 
         return new ResponseEntity<>(
-                new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
+                new SelfResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
                 HttpStatus.OK);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable("id") UUID id) {
+        try {
+            var user = userRepo.findById(id);
+            if (user.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(new UserResponse(id, user.get().getUsername()), HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error getting user id=" + id, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }
