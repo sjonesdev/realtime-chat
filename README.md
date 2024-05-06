@@ -1,3 +1,19 @@
+# realtime-chat
+
+Realtime chat app backend (frontend WIP)
+
+## Requirements
+
+-   Java 17
+-   Docker
+-   Maven
+
+## Kafka Setup
+
+-   `docker pull apache/kafka:3.7.0`
+-   `docker run -p 9092:9092 apache/kafka:3.7.0`
+-   Can download kafka 3.7.0 [here](https://kafka.apache.org/downloads) if you want to be able to run the scripts and stuff or run it not through docker
+
 ## Cassandra Setup
 
 -   `docker pull cassandra:latest`
