@@ -33,10 +33,11 @@ public class ChatServer {
     @Transient
     private Date createdAt;
 
-    public ChatServer(UUID id, String name, UUID ownerId, List<UUID> chatChannelIds, List<UUID> memberIds) {
+    public ChatServer(UUID id, String name, UUID ownerId, List<UUID> channelIds, List<UUID> memberIds) {
+        this.id = id;
         this.name = name;
         this.ownerId = ownerId;
-        this.channelIds = chatChannelIds;
+        this.channelIds = channelIds;
         this.memberIds = memberIds;
         this.createdAt = new Date(Uuids.unixTimestamp(id));
     }

@@ -61,7 +61,7 @@ public class ChatServerController {
             }
             return new ResponseEntity<>(servers, HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error at GET /servers with name " + name, e);
+            logger.error("Error at GET /servers with name " + name + " and ids " + ids, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -79,18 +79,23 @@ public class ChatServerController {
         }
     }
 
+    public record ServerRequest(String name) {
+    }
+
     @PostMapping("/servers")
     public ResponseEntity<ChatServer> createServer(@CurrentSecurityContext SecurityContext securityContext,
-            @RequestBody ChatServer chatServer) {
+            @RequestBody ServerRequest serverRequest) {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
-            chatServer.setId(UUIDs.timeBased());
-            chatServer.setOwnerId(user.getId());
-            chatServer.setMemberIds(List.of(user.getId()));
-            ChatServer _chatServer = serverRepo.save(chatServer);
-            return new ResponseEntity<>(_chatServer, HttpStatus.CREATED);
+            var server = new ChatServer(UUIDs.timeBased(), serverRequest.name(), user.getId(), List.of(),
+                    List.of(user.getId()));
+            logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
+                    server.getId(), server.getName(), server.getOwnerId(), server.getChannelIds(),
+                    server.getMemberIds()));
+            ChatServer savedServer = serverRepo.save(server);
+            return new ResponseEntity<>(savedServer, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error at POST /servers with " + chatServer, e);
+            logger.error("Error at POST /servers with " + serverRequest, e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

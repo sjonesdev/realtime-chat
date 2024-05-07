@@ -14,6 +14,7 @@ export interface Server {
     ownerId: string;
     channelIds: string[];
     memberIds: string[];
+    createdAt: string;
 }
 
 export async function fetchMessages(channelId: string): Promise<Message[]> {
@@ -42,6 +43,19 @@ export async function fetchServers({
         await fetch(`${BASE_URL}/servers${query}`, {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
+        })
+    ).json();
+}
+
+export async function postServer(name: string): Promise<Server> {
+    return (
+        await fetch(`${BASE_URL}/servers`, {
+            method: "post",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                name,
+            }),
         })
     ).json();
 }

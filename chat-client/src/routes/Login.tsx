@@ -42,7 +42,7 @@ export default () => {
                 type="password"
             />
             <Button type="submit">Sign In</Button>
-            <Show when={error() != null}>{error()}</Show>
+            <Show when={error()}>{error()}</Show>
         </form>
     );
 };
