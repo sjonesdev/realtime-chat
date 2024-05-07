@@ -5,7 +5,7 @@ import App from "./App";
 import Home from "./routes/Home";
 import Login from "./routes/Login";
 import Register from "./routes/Register";
-import ServerBrowser from "./routes/ServerBrowser";
+import Servers from "./routes/Servers";
 import { fetchAuth } from "./lib/user-client";
 import { AuthProvider } from "./components/auth-context";
 
@@ -18,7 +18,10 @@ render(
                 <Route path="/" component={Home} />
                 <Route path="/register" component={Register} />
                 <Route path="/login" component={Login} />
-                <Route path="/servers" component={ServerBrowser} />
+                <Route
+                    path="/servers/:serverId?/:channelId?"
+                    component={Servers}
+                />
             </Router>
         </AuthProvider>
     ),
