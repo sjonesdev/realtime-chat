@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.datastax.driver.core.utils.UUIDs;
 import com.samjones329.model.ChatChannel;
 import com.samjones329.model.ChatMessage;
 import com.samjones329.model.ChatServer;
@@ -48,13 +48,16 @@ public class ChatServerController {
     Logger logger = LoggerFactory.getLogger(ChatServerController.class);
 
     @GetMapping("/servers")
-    public ResponseEntity<List<ChatServer>> getAllServers(@RequestParam(required = false) String name) {
+    public ResponseEntity<List<ChatServer>> getAllServers(@RequestParam(required = false) String name,
+            @RequestParam(required = false) List<UUID> ids) {
         try {
             List<ChatServer> servers;
-            if (name == null) {
-                servers = serverRepo.findAll();
-            } else {
+            if (name != null && name.length() > 0) {
                 servers = serverRepo.findByNameContaining(name);
+            } else if (ids != null && !ids.isEmpty()) {
+                servers = serverRepo.findAllById(ids);
+            } else {
+                servers = serverRepo.findAll();
             }
             return new ResponseEntity<>(servers, HttpStatus.OK);
         } catch (Exception e) {
@@ -81,7 +84,7 @@ public class ChatServerController {
             @RequestBody ChatServer chatServer) {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
-            chatServer.setId(Uuids.timeBased());
+            chatServer.setId(UUIDs.timeBased());
             chatServer.setOwnerId(user.getId());
             chatServer.setMemberIds(List.of(user.getId()));
             ChatServer _chatServer = serverRepo.save(chatServer);
@@ -148,7 +151,7 @@ public class ChatServerController {
             if (server.get().getOwnerId() != user.getId()) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-            var channel = channelRepo.save(new ChatChannel(Uuids.timeBased(), id, request.name()));
+            var channel = channelRepo.save(new ChatChannel(UUIDs.timeBased(), id, request.name()));
             return new ResponseEntity<>(channel, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -25,16 +25,23 @@ export async function fetchMessages(channelId: string): Promise<Message[]> {
     ).json();
 }
 
-export async function fetchServers(nameContaining?: string): Promise<Server[]> {
+/** ids will be ignored if nameContaining exists */
+export async function fetchServers({
+    nameContaining,
+    ids,
+}: {
+    nameContaining?: string;
+    ids?: string[];
+}): Promise<Server[]> {
+    const query = nameContaining
+        ? `?name=${nameContaining}`
+        : ids
+        ? `?ids=${ids}`
+        : "";
     return (
-        await fetch(
-            `${BASE_URL}/servers${
-                nameContaining ? `?name=${nameContaining}` : ""
-            }`,
-            {
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-            }
-        )
+        await fetch(`${BASE_URL}/servers${query}`, {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        })
     ).json();
 }

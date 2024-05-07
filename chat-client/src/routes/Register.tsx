@@ -8,13 +8,18 @@ export default () => {
     const [email, setEmail] = createSignal("");
     const [username, setUsername] = createSignal("");
     const [password, setPassword] = createSignal("");
-    const [result, setResult] = createSignal<null | string>(null);
+    const [matchPassword, setMatchPassword] = createSignal("");
+    const [error, setError] = createSignal<null | string>(null);
     const navigate = useNavigate();
 
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
+                if (password() !== matchPassword()) {
+                    setError("Passwords do not match");
+                    return;
+                }
                 register(email(), username(), password())
                     .then((val) => {
                         console.log(val);
@@ -22,26 +27,31 @@ export default () => {
                     })
                     .catch((err) => {
                         console.error(err);
-                        setResult(err);
+                        setError(err);
                     });
             }}
         >
             <TextField
                 onChange={(e) => setEmail(e.currentTarget.value)}
                 label="Email"
+                type="email"
             />
             <TextField
                 onChange={(e) => setUsername(e.currentTarget.value)}
-                id="username"
                 label="Username"
             />
             <TextField
                 onChange={(e) => setPassword(e.currentTarget.value)}
-                id="password"
                 label="Password"
+                type="password"
+            />
+            <TextField
+                onChange={(e) => setMatchPassword(e.currentTarget.value)}
+                label="Re-Enter Password"
+                type="password"
             />
             <Button type="submit">Sign Up</Button>
-            <Show when={result() != null}>{result()}</Show>
+            <Show when={error() != null}>{error()}</Show>
         </form>
     );
 };

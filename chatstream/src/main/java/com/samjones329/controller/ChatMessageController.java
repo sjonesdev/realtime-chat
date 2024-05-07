@@ -19,7 +19,7 @@ import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.datastax.driver.core.utils.UUIDs;
 import com.samjones329.constants.KafkaConstants;
 import com.samjones329.model.ChatMessage;
 import com.samjones329.repository.ChatChannelRepository;
@@ -81,7 +81,7 @@ public class ChatMessageController {
 
             // Sending the message to kafka topic queue
             ChatMessage savedMessage = messageRepo
-                    .save(new ChatMessage(Uuids.timeBased(), channelId, user.getId(), message.getMessage()));
+                    .save(new ChatMessage(UUIDs.timeBased(), channelId, user.getId(), message.getMessage()));
             kafkaTemplate.send(KafkaConstants.KAFKA_TOPIC_BASE + "/" + channelId, savedMessage).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);

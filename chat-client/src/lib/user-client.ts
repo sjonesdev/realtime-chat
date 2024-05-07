@@ -3,9 +3,13 @@ export interface User {
     username: string;
 }
 
-export interface SelfUser extends User {
-    email: string;
-}
+export type SelfUser =
+    | (User & {
+          email: string;
+          serverIds: string[];
+      })
+    | null
+    | undefined;
 
 const BASE_URL = "http://localhost:8080";
 
@@ -30,7 +34,10 @@ export async function register(
     ).json();
 }
 
-export async function login(email: string, password: string) {
+export async function login(
+    email: string,
+    password: string
+): Promise<SelfUser> {
     return (
         await fetch(`${BASE_URL}/login`, {
             method: "POST",
@@ -39,4 +46,12 @@ export async function login(email: string, password: string) {
             body: JSON.stringify({ email, password }),
         })
     ).json();
+}
+
+export async function fetchAuth(): Promise<SelfUser | null> {
+    const res = await fetch(`${BASE_URL}/authentication`, {
+        credentials: "include",
+    });
+    if (!res.ok) return null;
+    return res.json();
 }

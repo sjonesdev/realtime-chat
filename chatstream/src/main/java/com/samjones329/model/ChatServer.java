@@ -1,13 +1,16 @@
 package com.samjones329.model;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 import java.util.UUID;
 
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
+
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @Table("servers")
 public class ChatServer {
@@ -27,20 +30,15 @@ public class ChatServer {
     @Column("member_ids")
     private List<UUID> memberIds;
 
-    public ChatServer() {
-    }
+    @Transient
+    private Date createdAt;
 
-    public ChatServer(String name) {
-        this.name = name;
-        this.channelIds = new ArrayList<>();
-        this.memberIds = new ArrayList<>();
-    }
-
-    public ChatServer(String name, UUID ownerId, List<UUID> chatChannelIds, List<UUID> memberIds) {
+    public ChatServer(UUID id, String name, UUID ownerId, List<UUID> chatChannelIds, List<UUID> memberIds) {
         this.name = name;
         this.ownerId = ownerId;
         this.channelIds = chatChannelIds;
         this.memberIds = memberIds;
+        this.createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public UUID getId() {
@@ -49,6 +47,7 @@ public class ChatServer {
 
     public void setId(UUID id) {
         this.id = id;
+        createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public String getName() {
@@ -81,6 +80,10 @@ public class ChatServer {
 
     public void setMemberIds(List<UUID> memberIds) {
         this.memberIds = memberIds;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
     @Override

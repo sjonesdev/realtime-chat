@@ -1,11 +1,15 @@
 package com.samjones329.model;
 
 import java.util.UUID;
+import java.util.Date;
 
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
+
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @Table("channels")
 public class ChatChannel {
@@ -19,13 +23,14 @@ public class ChatChannel {
 
     private String name;
 
-    public ChatChannel() {
-    }
+    @Transient
+    private Date createdAt;
 
     public ChatChannel(UUID id, UUID serverId, String name) {
         this.id = id;
         this.serverId = serverId;
         this.name = name;
+        this.createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public UUID getServerId() {
@@ -42,6 +47,7 @@ public class ChatChannel {
 
     public void setId(UUID id) {
         this.id = id;
+        createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public String getName() {
@@ -50,6 +56,10 @@ public class ChatChannel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
     @Override

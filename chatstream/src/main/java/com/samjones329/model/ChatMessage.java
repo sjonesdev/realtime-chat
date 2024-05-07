@@ -3,10 +3,14 @@ package com.samjones329.model;
 import java.util.Date;
 import java.util.UUID;
 
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
+
+import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @Table("messages")
 public class ChatMessage {
@@ -22,7 +26,7 @@ public class ChatMessage {
 
     private String message;
 
-    @Column("created_at")
+    @Transient
     private Date createdAt;
 
     public ChatMessage() {
@@ -33,6 +37,7 @@ public class ChatMessage {
         this.channelId = channelId;
         this.senderId = senderId;
         this.message = message;
+        this.createdAt = new Date(UUIDs.unixTimestamp(id));
     }
 
     public UUID getId() {
@@ -41,6 +46,7 @@ public class ChatMessage {
 
     public void setId(UUID id) {
         this.id = id;
+        createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public UUID getChannelId() {
@@ -65,5 +71,9 @@ public class ChatMessage {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
     }
 }
