@@ -24,6 +24,9 @@ public class ChatServer {
     @Column("owner_id")
     private UUID ownerId;
 
+    @Column("default_channel_id")
+    private UUID defaultChannelId;
+
     @Column("channel_ids")
     private List<UUID> channelIds;
 

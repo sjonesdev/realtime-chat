@@ -12,9 +12,17 @@ export interface Server {
     id: string;
     name: string;
     ownerId: string;
+    defaultChannelId: string;
     channelIds: string[];
     memberIds: string[];
     createdAt: string;
+}
+
+export interface Channel {
+    id: string;
+    name: string;
+    createdAt: string;
+    serverId: string;
 }
 
 export async function fetchMessages(channelId: string): Promise<Message[]> {
@@ -56,6 +64,14 @@ export async function postServer(name: string): Promise<Server> {
             body: JSON.stringify({
                 name,
             }),
+        })
+    ).json();
+}
+
+export async function fetchChannels(serverId: string): Promise<Channel[]> {
+    return (
+        await fetch(`${BASE_URL}/servers/${serverId}/channels`, {
+            credentials: "include",
         })
     ).json();
 }

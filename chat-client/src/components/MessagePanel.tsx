@@ -1,20 +1,23 @@
 import Button from "@suid/material/Button";
 import { Client } from "@stomp/stompjs";
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { User, fetchUser } from "../lib/user-client";
 import { Switch } from "solid-js";
 import { Match } from "solid-js";
 import { List, ListItem, TextField } from "@suid/material";
 import { For } from "solid-js";
-import { Message, fetchMessages } from "../lib/chat-api-client";
+import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
 
-export default async function Messages(channelId: string) {
-    const [messages, setMessages] = createSignal<Message[]>(
-        await fetchMessages(channelId)
-    );
+export default function MessagePanel({ channel }: { channel: Channel }) {
+    const [messages, setMessages] = createSignal<Message[]>();
     const [users, setUsers] = createSignal(new Map<string, User>());
     const [connected, setConnected] = createSignal(false);
     const [messageDraft, setMessageDraft] = createSignal("");
+
+    onMount(async () => {
+        setMessages(await fetchMessages(channel.id));
+        stompClient.activate();
+    });
 
     const stompClient = new Client({
         brokerURL: "ws://localhost:8080/chatws",
@@ -93,8 +96,6 @@ export default async function Messages(channelId: string) {
         console.error("Broker reported error: " + frame.headers["message"]);
         console.error("Additional details: " + frame.body);
     };
-
-    stompClient.activate();
 
     return (
         <>

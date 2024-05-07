@@ -7,23 +7,24 @@ use chat;
 CREATE TABLE IF NOT EXISTS servers (
     id timeuuid PRIMARY KEY,
     name text,
-    owner_id uuid,
-    channel_ids list<uuid>,
-    member_ids list<uuid>
+    owner_id timeuuid,
+    default_channel_id timeuuid,
+    channel_ids list<timeuuid>,
+    member_ids list<timeuuid>
 );
 CREATE INDEX IF NOT EXISTS servernameidx ON servers (name);
 
 CREATE TABLE IF NOT EXISTS channels (
     id timeuuid PRIMARY KEY,
     name text,
-    server_id uuid
+    server_id timeuuid
 );
 CREATE INDEX IF NOT EXISTS serveridx ON channels (server_id);
 
 CREATE TABLE IF NOT EXISTS messages (
     id timeuuid PRIMARY KEY,
-    sender_id uuid,
-    channel_id uuid,
+    sender_id timeuuid,
+    channel_id timeuuid,
     message text
 );
 CREATE INDEX IF NOT EXISTS channelidx ON messages (channel_id);
@@ -33,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
     username text,
     email text,
     password_hash text,
-    server_ids list<uuid>
+    server_ids list<timeuuid>
 );
 CREATE INDEX IF NOT EXISTS emailidx ON users (email);
 CREATE INDEX IF NOT EXISTS unameidx ON users (username);

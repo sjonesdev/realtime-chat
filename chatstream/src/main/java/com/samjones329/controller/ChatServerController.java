@@ -25,6 +25,7 @@ import com.samjones329.model.ChatChannel;
 import com.samjones329.model.ChatMessage;
 import com.samjones329.model.ChatServer;
 import com.samjones329.repository.ChatServerRepository;
+import com.samjones329.repository.UserRepository;
 import com.samjones329.service.UserDetailsServiceImpl;
 import com.samjones329.repository.ChatChannelRepository;
 import com.samjones329.repository.ChatMessageRepository;
@@ -32,6 +33,9 @@ import com.samjones329.repository.ChatMessageRepository;
 @RestController
 @RequestMapping("/api")
 public class ChatServerController {
+
+    @Autowired
+    UserRepository userRepo;
 
     @Autowired
     ChatServerRepository serverRepo;
@@ -93,6 +97,15 @@ public class ChatServerController {
                     server.getId(), server.getName(), server.getOwnerId(), server.getChannelIds(),
                     server.getMemberIds()));
             ChatServer savedServer = serverRepo.save(server);
+            ChatChannel defaultChannel = new ChatChannel(UUIDs.timeBased(), savedServer.getId(), "Default");
+            defaultChannel = channelRepo.save(defaultChannel);
+            var serverIds = user.getServerIds();
+            if (serverIds == null) {
+                serverIds = List.of(defaultChannel.getId());
+            } else {
+                serverIds.add(defaultChannel.getId());
+            }
+            userRepo.save(user);
             return new ResponseEntity<>(savedServer, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error at POST /servers with " + serverRequest, e);
@@ -131,8 +144,6 @@ public class ChatServerController {
     public ResponseEntity<List<ChatChannel>> getChannels(@PathVariable("id") UUID id) {
         try {
             var servers = channelRepo.findByServerId(id);
-            if (servers.isEmpty())
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             return new ResponseEntity<>(servers, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error at GET /servers/{id}/channels with id " + id, e);
