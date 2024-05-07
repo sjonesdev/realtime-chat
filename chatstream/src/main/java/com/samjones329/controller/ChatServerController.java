@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +29,6 @@ import com.samjones329.service.UserDetailsServiceImpl;
 import com.samjones329.repository.ChatChannelRepository;
 import com.samjones329.repository.ChatMessageRepository;
 
-@CrossOrigin(originPatterns = "*")
 @RestController
 @RequestMapping("/api")
 public class ChatServerController {
@@ -58,9 +56,6 @@ public class ChatServerController {
             } else {
                 servers = serverRepo.findByNameContaining(name);
             }
-            if (servers.isEmpty())
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            logger.info("Chat Servers: " + servers);
             return new ResponseEntity<>(servers, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error at GET /servers with name " + name, e);

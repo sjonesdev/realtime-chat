@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@solidjs/router':
+    specifier: ^0.13.3
+    version: 0.13.3(solid-js@1.8.17)
   '@stomp/stompjs':
     specifier: ^7.0.0
     version: 7.0.0
@@ -624,6 +627,14 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@solidjs/router@0.13.3(solid-js@1.8.17):
+    resolution: {integrity: sha512-p8zznlvnN3KySMXqT8irhubgDNTETNa/guaGHU/cZl7kuiPO3PmkWNYfoNCygtEpoxLmLpf62/ZKeyhFdZexsw==}
+    peerDependencies:
+      solid-js: ^1.8.6
+    dependencies:
+      solid-js: 1.8.17
+    dev: false
 
   /@stomp/stompjs@7.0.0:
     resolution: {integrity: sha512-fGdq4wPDnSV/KyOsjq4P+zLc8MFWC3lMmP5FBgLWKPJTYcuCbAIrnRGjB7q2jHZdYCOD5vxLuFoKIYLy5/u8Pw==}

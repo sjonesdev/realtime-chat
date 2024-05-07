@@ -11,4 +11,6 @@ import com.samjones329.model.User;
 @Repository
 public interface UserRepository extends CassandraRepository<User, UUID> {
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }

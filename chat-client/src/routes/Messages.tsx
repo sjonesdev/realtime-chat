@@ -129,8 +129,7 @@ export default async function Messages(channelId: string) {
                     label="Send a message"
                     variant="standard"
                     fullWidth
-                    onChange={(e) => setMessageDraft(e.target.value)}
-                    value={messageDraft()}
+                    onChange={(e) => setMessageDraft(e.currentTarget.value)}
                 ></TextField>
                 <Button>Send</Button>
             </form>

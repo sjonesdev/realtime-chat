@@ -37,3 +37,4 @@ CREATE TABLE IF NOT EXISTS users (
     server_ids list<uuid>
 );
 CREATE INDEX IF NOT EXISTS emailidx ON users (email);
+CREATE INDEX IF NOT EXISTS unameidx ON users (username);

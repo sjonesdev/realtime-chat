@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +31,6 @@ import com.samjones329.service.UserDetailsServiceImpl;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@CrossOrigin(originPatterns = "*")
 @RestController
 public class UserController {
 
@@ -59,8 +57,11 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<SelfResponse> register(@RequestBody RegisterRequest userRequest) {
         try {
-            var existingUser = userRepo.findByEmail(userRequest.email());
-            if (existingUser.isPresent())
+            var existingEmail = userRepo.findByEmail(userRequest.email());
+            if (existingEmail.isPresent())
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
+            var existingUsername = userRepo.findByUsername(userRequest.username());
+            if (existingUsername.isPresent())
                 return new ResponseEntity<>(HttpStatus.CONFLICT);
             // BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             String encodedPassword = passwordEncoder.encode(userRequest.password);

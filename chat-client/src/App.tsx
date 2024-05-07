@@ -1,3 +1,3 @@
-export default function App() {
-    return <div></div>;
-}
+import { JSX } from "solid-js/jsx-runtime";
+
+export default (props: { children?: JSX.Element }) => <>{props.children}</>;

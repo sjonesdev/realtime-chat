@@ -7,6 +7,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "@solidjs/router": "^0.13.3",
     "@stomp/stompjs": "^7.0.0",
     "@suid/icons-material": "*",
     "@suid/material": "*",
