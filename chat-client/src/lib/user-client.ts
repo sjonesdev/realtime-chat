@@ -30,16 +30,16 @@ export async function register(
     username: string,
     password: string
 ): Promise<SelfUser> {
-    return (
-        await fetch(`${BASE_URL}/register`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ email, username, password }),
-        })
-    ).json();
+    const res = await fetch(`${BASE_URL}/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, username, password }),
+    });
+    if (!res.ok) return null;
+    return res.json();
 }
 
 export async function login(

@@ -1,11 +1,7 @@
-import {
-    Box,
-    Button,
-    Card,
-    Stack,
-    TextField,
-    Typography,
-} from "@suid/material";
+import Button from "@suid/material/Button";
+import Stack from "@suid/material/Stack";
+import Typography from "@suid/material/Typography";
+import TextField from "@suid/material/TextField";
 import useTheme from "@suid/material/styles/useTheme";
 import { createSignal, onMount } from "solid-js";
 import { login } from "../lib/user-client";
@@ -34,9 +30,8 @@ export default () => {
             <Stack
                 component="form"
                 alignItems="center"
-                border={"2 solid primary"}
                 gap={1}
-                sx={{ [`& ${TextField}`]: { m: 1, width: "25ch" } }}
+                sx={{ [`& ${TextField}`]: { m: 1, width: "100ch" } }}
                 onSubmit={(e) => {
                     e.preventDefault();
                     login(email(), password())
@@ -52,7 +47,7 @@ export default () => {
                             }
                         })
                         .catch((err) => {
-                            console.error(err);
+                            console.error("Error logging in: ", err);
                             setError(err);
                         });
                 }}
