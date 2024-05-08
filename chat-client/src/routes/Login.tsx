@@ -1,5 +1,13 @@
-import { Button, TextField } from "@suid/material";
-import { createSignal } from "solid-js";
+import {
+    Box,
+    Button,
+    Card,
+    Stack,
+    TextField,
+    Typography,
+} from "@suid/material";
+import useTheme from "@suid/material/styles/useTheme";
+import { createSignal, onMount } from "solid-js";
 import { login } from "../lib/user-client";
 import { useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
@@ -12,39 +20,64 @@ export default () => {
     const [error, setError] = createSignal<null | string>(null);
     const navigate = useNavigate();
     const [authState, { setUser }] = useContext(AuthContext);
+    const theme = useTheme();
+
+    onMount(() => {
+        if (authState.user) navigate("/servers");
+    });
 
     return (
-        <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                login(email(), password())
-                    .then((val) => {
-                        console.log("Login", val);
-                        if (val != null) {
-                            setUser(val);
-                            navigate("/servers");
-                        } else {
-                            setError("Invalid credentials, please try again");
-                        }
-                    })
-                    .catch((err) => {
-                        console.error(err);
-                        setError(err);
-                    });
-            }}
-        >
-            <TextField
-                onChange={(e) => setEmail(e.currentTarget.value)}
-                label="Email"
-                type="email"
-            />
-            <TextField
-                onChange={(e) => setPassword(e.currentTarget.value)}
-                label="Password"
-                type="password"
-            />
-            <Button type="submit">Sign In</Button>
-            <Show when={error()}>{error()}</Show>
-        </form>
+        <Stack alignItems="center" gap={2} marginY={2}>
+            <Typography textAlign="center" variant="h2" component="h1">
+                Login to Fluence
+            </Typography>
+            <Stack
+                component="form"
+                alignItems="center"
+                border={"2 solid primary"}
+                gap={1}
+                sx={{ [`& ${TextField}`]: { m: 1, width: "25ch" } }}
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    login(email(), password())
+                        .then((val) => {
+                            console.debug("Login attempt: ", val);
+                            if (val != null) {
+                                setUser(val);
+                                navigate("/servers");
+                            } else {
+                                setError(
+                                    "Invalid credentials, please try again"
+                                );
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            setError(err);
+                        });
+                }}
+            >
+                <TextField
+                    required
+                    onChange={(e) => setEmail(e.currentTarget.value)}
+                    label="Email"
+                    type="email"
+                />
+                <TextField
+                    required
+                    onChange={(e) => setPassword(e.currentTarget.value)}
+                    label="Password"
+                    type="password"
+                />
+                <Button variant="contained" type="submit">
+                    Sign In
+                </Button>
+                <Show when={error()}>
+                    <Typography textAlign="center" color="error">
+                        {error()}
+                    </Typography>
+                </Show>
+            </Stack>
+        </Stack>
     );
 };

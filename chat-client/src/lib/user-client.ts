@@ -46,14 +46,14 @@ export async function login(
     email: string,
     password: string
 ): Promise<SelfUser> {
-    return (
-        await fetch(`${BASE_URL}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ email, password }),
-        })
-    ).json();
+    const res = await fetch(`${BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) return null;
+    return res.json();
 }
 
 export async function fetchAuth(): Promise<SelfUser | null> {
