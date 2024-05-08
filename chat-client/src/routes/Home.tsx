@@ -1,5 +1,6 @@
-import { useNavigate } from "@solidjs/router";
-import { Box, Button, Container, Stack, Typography } from "@suid/material";
+import Button from "@suid/material/Button";
+import Stack from "@suid/material/Stack";
+import Typography from "@suid/material/Typography";
 import { Show, useContext } from "solid-js";
 import { AuthContext } from "../components/auth-context";
 
