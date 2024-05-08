@@ -1,8 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { Box, Button, Container, Stack, Typography } from "@suid/material";
+import { Show, useContext } from "solid-js";
+import { AuthContext } from "../components/auth-context";
 
 export default () => {
-    const navigate = useNavigate();
+    const [userState] = useContext(AuthContext);
     return (
         <Stack alignItems="center" gap={2} marginY={4}>
             <Typography variant="h3" component="div">
@@ -15,15 +17,23 @@ export default () => {
                 A Realtime Chat App
             </Typography>
             <Stack direction="row" gap={2}>
-                <Button variant="contained" onClick={() => navigate("/login")}>
-                    Sign In
-                </Button>
-                <Button
-                    variant="outlined"
-                    onClick={() => navigate("/register")}
+                <Show
+                    when={userState.user}
+                    fallback={
+                        <>
+                            <Button variant="contained" href="/login">
+                                Sign In
+                            </Button>
+                            <Button variant="outlined" href="/register">
+                                Sign Up
+                            </Button>
+                        </>
+                    }
                 >
-                    Sign Up
-                </Button>
+                    <Button variant="contained" href="/servers">
+                        Open Fluence
+                    </Button>
+                </Show>
             </Stack>
         </Stack>
     );
