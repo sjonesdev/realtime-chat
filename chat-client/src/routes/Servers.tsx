@@ -18,33 +18,45 @@ import CreateServer from "../components/CreateServer";
 import ServerControlPanel from "../components/ServerControlPanel";
 
 export default function Servers() {
-    const [joinedServers, setJoinedServers] = createSignal<Server[]>(null, {
+    const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
         equals: false,
     });
-    const [userState] = useContext(AuthContext);
+    const [userState, { setUser }] = useContext(AuthContext);
     const navigate = useNavigate();
     const params = useParams<{ serverId?: string; channelId?: string }>();
-    const [serverId, setServerId] = createSignal(params.serverId);
-    const [channelId, setChannelId] = createSignal(params.channelId);
-    const [server, setServer] = createSignal<Server>();
+    const [server, setServer] = createSignal<number>(-1);
 
     onMount(async () => {
         if (!userState.user) navigate("/login");
-        const newJoinedServers =
-            (await fetchServers({ ids: userState.user?.serverIds })) ?? [];
-        setJoinedServers(newJoinedServers);
-        if (params.serverId) {
-            for (let i = 0; i < newJoinedServers.length; i++) {
-                if (params.serverId === newJoinedServers[i].id) {
-                    console.log("Found selected server");
-                    setServer(newJoinedServers[i]);
-                }
-            }
+        console.log(`fetching servers: ${userState?.user?.serverIds}`);
+        const servers = await fetchServers({
+            ids: userState?.user?.serverIds,
+        });
+        console.log("Got servers", servers);
+        setJoinedServers(servers);
+    });
+
+    // will trigger when params or joinedServers change
+    createEffect(async () => {
+        const servers = joinedServers();
+        if (!servers || !servers.length || !params.serverId) return;
+        for (let i = 0; i < servers.length; i++) {
+            if (params.serverId !== servers[i].id) continue;
+            console.log("Found selected server");
+            if (!params.channelId)
+                navigate(
+                    `/servers/${params.serverId}/${servers[i].defaultChannelId}`
+                );
+            setServer(i);
         }
     });
 
     const addJoinedServer = (server: Server) => {
         console.log("Server joined", server);
+        if (userState.user!.serverIds)
+            userState.user!.serverIds.push(server.id);
+        else userState.user!.serverIds = [server.id];
+        setUser(userState.user!);
         setJoinedServers((prev) => {
             prev?.push(server);
             return prev;
@@ -58,27 +70,29 @@ export default function Servers() {
                 {(server) => (
                     <Button
                         onClick={() => {
-                            navigate(`/servers/${server.id}`);
-                            setServerId(server.id);
-                            setChannelId(undefined);
-                            setServer(server);
+                            navigate(
+                                `/servers/${server.id}/${server.defaultChannelId}`
+                            );
                         }}
                     >{`${server.name}`}</Button>
                 )}
             </For>
-            <Show when={!serverId()}>
+            <Show when={!params.serverId} keyed>
                 <ServerBrowser addJoinedServer={addJoinedServer} />
             </Show>
-            <Show when={serverId()}>
-                <Show
-                    when={server()}
-                    fallback={<div>You haven't joined this server</div>}
-                >
-                    <ServerControlPanel
-                        server={server()}
-                        initChannel={channelId()}
-                    />
-                </Show>
+            <Show
+                when={
+                    params.serverId &&
+                    params.channelId &&
+                    server() >= 0 &&
+                    joinedServers() &&
+                    joinedServers().length
+                }
+            >
+                <ServerControlPanel
+                    server={joinedServers()[server()]}
+                    initChannel={params.channelId}
+                />
             </Show>
         </Container>
     );

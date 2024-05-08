@@ -6,7 +6,7 @@ export interface User {
 export type SelfUser =
     | (User & {
           email: string;
-          serverIds: string[];
+          serverIds?: string[];
       })
     | null
     | undefined;

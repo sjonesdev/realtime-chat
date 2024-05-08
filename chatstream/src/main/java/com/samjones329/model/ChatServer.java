@@ -36,10 +36,12 @@ public class ChatServer {
     @Transient
     private Date createdAt;
 
-    public ChatServer(UUID id, String name, UUID ownerId, List<UUID> channelIds, List<UUID> memberIds) {
+    public ChatServer(UUID id, String name, UUID ownerId, UUID defaultChannelId, List<UUID> channelIds,
+            List<UUID> memberIds) {
         this.id = id;
         this.name = name;
         this.ownerId = ownerId;
+        this.defaultChannelId = defaultChannelId;
         this.channelIds = channelIds;
         this.memberIds = memberIds;
         this.createdAt = new Date(Uuids.unixTimestamp(id));
@@ -88,6 +90,14 @@ public class ChatServer {
 
     public Date getCreatedAt() {
         return createdAt;
+    }
+
+    public UUID getDefaultChannelId() {
+        return defaultChannelId;
+    }
+
+    public void setDefaultChannelId(UUID defaultChannelId) {
+        this.defaultChannelId = defaultChannelId;
     }
 
     @Override

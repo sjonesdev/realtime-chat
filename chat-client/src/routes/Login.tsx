@@ -23,6 +23,8 @@ export default () => {
                         if (val != null) {
                             setUser(val);
                             navigate("/servers");
+                        } else {
+                            setError("Invalid credentials, please try again");
                         }
                     })
                     .catch((err) => {

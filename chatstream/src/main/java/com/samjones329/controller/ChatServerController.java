@@ -59,6 +59,7 @@ public class ChatServerController {
             if (name != null && name.length() > 0) {
                 servers = serverRepo.findByNameContaining(name);
             } else if (ids != null && !ids.isEmpty()) {
+                logger.info("Fetching servers with ids " + ids);
                 servers = serverRepo.findAllById(ids);
             } else {
                 servers = serverRepo.findAll();
@@ -91,22 +92,25 @@ public class ChatServerController {
             @RequestBody ServerRequest serverRequest) {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
-            var server = new ChatServer(UUIDs.timeBased(), serverRequest.name(), user.getId(), List.of(),
+            var serverId = UUIDs.timeBased();
+            ChatChannel defaultChannel = new ChatChannel(UUIDs.timeBased(), serverId, "Default");
+            defaultChannel = channelRepo.save(defaultChannel);
+            var server = new ChatServer(serverId, serverRequest.name(), user.getId(), defaultChannel.getId(),
+                    List.of(defaultChannel.getId()),
                     List.of(user.getId()));
             logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
                     server.getId(), server.getName(), server.getOwnerId(), server.getChannelIds(),
                     server.getMemberIds()));
-            ChatServer savedServer = serverRepo.save(server);
-            ChatChannel defaultChannel = new ChatChannel(UUIDs.timeBased(), savedServer.getId(), "Default");
-            defaultChannel = channelRepo.save(defaultChannel);
+            server = serverRepo.save(server);
             var serverIds = user.getServerIds();
             if (serverIds == null) {
-                serverIds = List.of(defaultChannel.getId());
+                serverIds = List.of(server.getId());
+                user.setServerIds(serverIds);
             } else {
                 serverIds.add(defaultChannel.getId());
             }
             userRepo.save(user);
-            return new ResponseEntity<>(savedServer, HttpStatus.CREATED);
+            return new ResponseEntity<>(server, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error at POST /servers with " + serverRequest, e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

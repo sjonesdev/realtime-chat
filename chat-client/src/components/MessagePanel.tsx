@@ -9,8 +9,12 @@ import { For } from "solid-js";
 import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
 
 export default function MessagePanel({ channel }: { channel: Channel }) {
-    const [messages, setMessages] = createSignal<Message[]>();
-    const [users, setUsers] = createSignal(new Map<string, User>());
+    const [messages, setMessages] = createSignal<Message[]>([], {
+        equals: false,
+    });
+    const [users, setUsers] = createSignal(new Map<string, User>(), {
+        equals: false,
+    });
     const [connected, setConnected] = createSignal(false);
     const [messageDraft, setMessageDraft] = createSignal("");
 
@@ -56,6 +60,10 @@ export default function MessagePanel({ channel }: { channel: Channel }) {
                 const user = await fetchUser(msg.senderId);
                 setUsers((users) => users.set(msg.senderId, user));
             }
+            setMessages((prev) => {
+                prev.push(msg);
+                return prev;
+            });
         });
         stompClient.subscribe("/chatUpdateResponse", async (messagesUpdate) => {
             console.log(messagesUpdate);
@@ -72,6 +80,7 @@ export default function MessagePanel({ channel }: { channel: Channel }) {
                 newUsers.forEach((user) => prev.set(user.id, user));
                 return prev;
             });
+            setMessages((prev) => prev.concat(msg.messages));
         });
     };
 
