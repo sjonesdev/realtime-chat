@@ -6,6 +6,7 @@ import {
     AppBar,
     Box,
     Button,
+    Divider,
     IconButton,
     Link,
     Menu,
@@ -95,10 +96,12 @@ export default (props: { children?: JSX.Element }) => {
                                 "aria-labelledby": "basic-button",
                             }}
                         >
+                            <MenuItem>Hi, {userState.user?.username}!</MenuItem>
+                            <Divider />
                             <MenuItem
                                 onClick={() => {
                                     handleClose();
-                                    navigate("/profile");
+                                    // open drawer
                                 }}
                             >
                                 Profile
@@ -106,7 +109,7 @@ export default (props: { children?: JSX.Element }) => {
                             <MenuItem
                                 onClick={() => {
                                     handleClose();
-                                    navigate("/settings");
+                                    // open drawer
                                 }}
                             >
                                 Settings
