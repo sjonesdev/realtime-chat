@@ -1,5 +1,6 @@
 package com.samjones329.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.samjones329.constants.KafkaConstants;
 import com.samjones329.model.ChatChannel;
 import com.samjones329.model.ChatMessage;
 import com.samjones329.model.ChatServer;
@@ -48,6 +52,9 @@ public class ChatServerController {
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private KafkaAdmin kafkaAdmin;
 
     Logger logger = LoggerFactory.getLogger(ChatServerController.class);
 
@@ -95,13 +102,19 @@ public class ChatServerController {
             var serverId = UUIDs.timeBased();
             ChatChannel defaultChannel = new ChatChannel(UUIDs.timeBased(), serverId, "Default");
             defaultChannel = channelRepo.save(defaultChannel);
+
+            kafkaAdmin.createOrModifyTopics(
+                    TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + defaultChannel.getId().toString())
+                            .build());
+
             var server = new ChatServer(serverId, serverRequest.name(), user.getId(), defaultChannel.getId(),
                     List.of(defaultChannel.getId()),
                     List.of(user.getId()));
+            server = serverRepo.save(server);
             logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
                     server.getId(), server.getName(), server.getOwnerId(), server.getChannelIds(),
                     server.getMemberIds()));
-            server = serverRepo.save(server);
+
             var serverIds = user.getServerIds();
             if (serverIds == null) {
                 serverIds = List.of(server.getId());
@@ -110,6 +123,7 @@ public class ChatServerController {
                 serverIds.add(defaultChannel.getId());
             }
             userRepo.save(user);
+
             return new ResponseEntity<>(server, HttpStatus.CREATED);
         } catch (Exception e) {
             logger.error("Error at POST /servers with " + serverRequest, e);
@@ -171,7 +185,11 @@ public class ChatServerController {
             if (server.get().getOwnerId() != user.getId()) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
+
             var channel = channelRepo.save(new ChatChannel(UUIDs.timeBased(), id, request.name()));
+            kafkaAdmin.createOrModifyTopics(
+                    TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + channel.getId().toString()).build());
+
             return new ResponseEntity<>(channel, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -226,7 +244,9 @@ public class ChatServerController {
             }
 
             var messages = msgRepo.findByChannelId(id);
-
+            // messages are ordered by timestamp bc of timeuuid, but we want the most recent
+            // ones at the end, not the front
+            Collections.reverse(messages);
             return new ResponseEntity<>(messages, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error getting messages for channel id=" + id, e);

@@ -14,7 +14,15 @@ export type SelfUser =
 const BASE_URL = "http://localhost:8080";
 
 export async function fetchUser(id: string): Promise<User> {
-    return (await fetch(`${BASE_URL}/user/${id}`)).json();
+    return (
+        await fetch(`${BASE_URL}/user/${id}`, { credentials: "include" })
+    ).json();
+}
+
+export async function fetchUsers(ids: string[]): Promise<User[]> {
+    return (
+        await fetch(`${BASE_URL}/users?ids=${ids}`, { credentials: "include" })
+    ).json();
 }
 
 export async function register(

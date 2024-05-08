@@ -1,6 +1,7 @@
 package com.samjones329.controller;
 
 import java.util.UUID;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import com.samjones329.service.UserDetailsServiceImpl;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 public class UserController {
@@ -142,6 +144,21 @@ public class UserController {
             return new ResponseEntity<>(new UserResponse(id, user.get().getUsername()), HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error getting user id=" + id, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserResponse>> getUsers(@RequestParam List<UUID> ids) {
+        try {
+            var users = userRepo.findAllById(ids);
+            var userResponses = new ArrayList<UserResponse>();
+            for (var user : users) {
+                userResponses.add(new UserResponse(user.getId(), user.getUsername()));
+            }
+            return new ResponseEntity<>(userResponses, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error fetching users with ids=" + ids);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
