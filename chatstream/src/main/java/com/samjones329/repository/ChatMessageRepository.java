@@ -13,8 +13,8 @@ import com.samjones329.model.ChatMessage;
 
 @Repository
 public interface ChatMessageRepository extends CassandraRepository<ChatMessage, UUID> {
-    List<ChatMessage> findByChannelId(UUID channelId);
+    List<ChatMessage> findByChannelIdOrderByIdAsc(UUID channelId);
 
-    @Query("SELECT * FROM chat.messages WHERE channel_id = :channelId AND toTimestamp(id) > :since;")
+    @Query("SELECT * FROM chat.messages WHERE channel_id = :channelId AND toTimestamp(id) > :since ORDER BY id ASC;")
     List<ChatMessage> getLatestChatMessages(@Param("since") Date since, @Param("channelId") UUID channelId);
 }

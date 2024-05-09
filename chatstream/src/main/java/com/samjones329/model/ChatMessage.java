@@ -4,21 +4,20 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.cassandra.core.cql.Ordering;
+import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.Column;
-import org.springframework.data.cassandra.core.mapping.Indexed;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @Table("messages")
 public class ChatMessage {
-    @PrimaryKey
+    @PrimaryKeyColumn(name = "id", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.ASCENDING)
     private UUID id;
 
-    @Indexed
-    @Column("channel_id")
+    @PrimaryKeyColumn(name = "channel_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private UUID channelId;
 
     @Column("sender_id")
@@ -37,7 +36,7 @@ public class ChatMessage {
         this.channelId = channelId;
         this.senderId = senderId;
         this.message = message;
-        this.createdAt = new Date(UUIDs.unixTimestamp(id));
+        this.createdAt = new Date(Uuids.unixTimestamp(id));
     }
 
     public UUID getId() {

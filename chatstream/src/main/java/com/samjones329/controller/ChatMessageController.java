@@ -20,7 +20,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.constants.KafkaConstants;
 import com.samjones329.model.ChatMessage;
 import com.samjones329.repository.ChatChannelRepository;
@@ -87,7 +87,7 @@ public class ChatMessageController {
                 throw new RuntimeException("User cannot message in unjoined server");
             // Sending the message to kafka topic queue
             ChatMessage savedMessage = messageRepo
-                    .save(new ChatMessage(UUIDs.timeBased(), channelId, user.getId(), message.getMessage()));
+                    .save(new ChatMessage(Uuids.timeBased(), channelId, user.getId(), message.getMessage()));
             System.out.println("Saved message: " + savedMessage);
             kafkaTemplate
                     .send(KafkaConstants.KAFKA_TOPIC_BASE + "." + channelId.toString(), savedMessage)

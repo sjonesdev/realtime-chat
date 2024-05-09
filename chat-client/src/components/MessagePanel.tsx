@@ -4,19 +4,33 @@ import { createSignal, onMount, useContext } from "solid-js";
 import { User, fetchUser, fetchUsers } from "../lib/user-client";
 import { Switch } from "solid-js";
 import { Match } from "solid-js";
-import { List, ListItem, TextField } from "@suid/material";
+import {
+    IconButton,
+    List,
+    ListItem,
+    ListItemText,
+    Stack,
+    TextField,
+    Typography,
+} from "@suid/material";
 import { For } from "solid-js";
 import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
 import { AuthContext } from "./auth-context";
+import { Send } from "@suid/icons-material";
 
-export default function MessagePanel({ channel }: { channel: Channel }) {
+export default function MessagePanel({
+    channel,
+    setConnected,
+}: {
+    channel: Channel;
+    setConnected: (connected: boolean) => void;
+}) {
     const [messages, setMessages] = createSignal<Message[]>([], {
         equals: false,
     });
     const [users, setUsers] = createSignal(new Map<string, User>(), {
         equals: false,
     });
-    const [connected, setConnected] = createSignal(false);
     const [messageDraft, setMessageDraft] = createSignal("");
     const [userState] = useContext(AuthContext);
 
@@ -109,23 +123,31 @@ export default function MessagePanel({ channel }: { channel: Channel }) {
         console.log("unhandled receipt", receipt);
 
     return (
-        <>
-            <Switch fallback={<div>Not Connected</div>}>
-                <Match when={connected}>
-                    <div>Connected</div>
-                </Match>
-            </Switch>
+        <Stack height="100%" justifyContent="flex-end">
             <List>
                 <For each={messages()}>
                     {(item) => (
                         <ListItem>
-                            {users().get(item.senderId)?.username}:{" "}
-                            {item.message}
+                            <ListItemText
+                                primary={
+                                    <>
+                                        {users().get(item.senderId)?.username}{" "}
+                                        <Typography variant="caption">
+                                            {new Date(
+                                                item.createdAt
+                                            ).toLocaleString()}
+                                        </Typography>
+                                    </>
+                                }
+                                secondary={item.message}
+                            />
                         </ListItem>
                     )}
                 </For>
             </List>
-            <form
+            <Stack
+                component="form"
+                direction="row"
                 onSubmit={(e) => {
                     e.preventDefault();
                     console.log(
@@ -140,6 +162,7 @@ export default function MessagePanel({ channel }: { channel: Channel }) {
                             message: messageDraft(),
                         }),
                     });
+                    e.currentTarget.reset();
                 }}
             >
                 <TextField
@@ -148,8 +171,10 @@ export default function MessagePanel({ channel }: { channel: Channel }) {
                     fullWidth
                     onChange={(e) => setMessageDraft(e.currentTarget.value)}
                 ></TextField>
-                <Button type="submit">Send</Button>
-            </form>
-        </>
+                <IconButton type="submit">
+                    <Send />
+                </IconButton>
+            </Stack>
+        </Stack>
     );
 }

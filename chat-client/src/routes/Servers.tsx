@@ -5,6 +5,7 @@ import {
     For,
     useContext,
     onMount,
+    type JSX,
 } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 
@@ -20,6 +21,8 @@ import ServerControlPanel from "../components/ServerControlPanel";
 
 import { type Server, fetchServers } from "../lib/chat-api-client";
 import { APPBAR_HEIGHT, BODY_MARGIN } from "../lib/style-constants";
+import DefaultDetails from "../components/DefaultDetails";
+import DefaultHeader from "../components/DefaultHeader";
 
 export default function Servers() {
     const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
@@ -30,6 +33,20 @@ export default function Servers() {
     const params = useParams<{ serverId?: string; channelId?: string }>();
     const [server, setServer] = createSignal<number>(-1);
     const theme = useTheme();
+
+    const [detailsElement, setDetailsElement] = createSignal(
+        <DefaultDetails />
+    );
+    const setDetailsElementProxy = (elem?: JSX.Element) => {
+        if (elem) setDetailsElement(elem);
+        else setDetailsElement(<DefaultDetails />);
+    };
+
+    const [headerElement, setHeaderElement] = createSignal(<DefaultHeader />);
+    const setHeaderElementProxy = (elem?: JSX.Element) => {
+        if (elem) setHeaderElement(elem);
+        else setHeaderElement(<DefaultHeader />);
+    };
 
     onMount(async () => {
         if (!userState.user) navigate("/login");
@@ -84,7 +101,7 @@ export default function Servers() {
                 padding={1}
                 borderBottom={`1px solid ${theme.palette.primary.light}`}
             >
-                Header
+                {headerElement()}
             </Box>
             <Box
                 gridArea="serversidebar"
@@ -109,6 +126,7 @@ export default function Servers() {
                 </Stack>
                 <CreateServer addJoinedServer={addJoinedServer} />
             </Box>
+
             <Box
                 gridArea="main"
                 padding={1}
@@ -123,17 +141,23 @@ export default function Servers() {
                         joinedServers().length
                     }
                     fallback={
-                        <ServerBrowser addJoinedServer={addJoinedServer} />
+                        <ServerBrowser
+                            addJoinedServer={addJoinedServer}
+                            setDetails={setDetailsElementProxy}
+                            setHeader={setHeaderElementProxy}
+                        />
                     }
                 >
                     <ServerControlPanel
                         server={joinedServers()[server()]}
                         initChannel={params.channelId}
+                        setDetails={setDetailsElementProxy}
+                        setHeader={setHeaderElementProxy}
                     />
                 </Show>
             </Box>
             <Box gridArea="detailsidebar" padding={1}>
-                Details
+                {detailsElement()}
             </Box>
         </Box>
     );

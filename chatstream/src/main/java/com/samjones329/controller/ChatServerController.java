@@ -1,7 +1,6 @@
 package com.samjones329.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -246,10 +245,7 @@ public class ChatServerController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            var messages = msgRepo.findByChannelId(id);
-            // messages are ordered by timestamp bc of timeuuid, but we want the most recent
-            // ones at the end, not the front
-            Collections.reverse(messages);
+            var messages = msgRepo.findByChannelIdOrderByIdAsc(id);
             return new ResponseEntity<>(messages, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error getting messages for channel id=" + id, e);

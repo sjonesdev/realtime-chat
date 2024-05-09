@@ -13,11 +13,16 @@ import { fetchServers, type Server } from "../lib/chat-api-client";
 import ListItemButton from "@suid/material/ListItemButton";
 import ListItemText from "@suid/material/ListItemText";
 import Divider from "@suid/material/Divider";
+import type { JSX } from "solid-js/jsx-runtime";
 
 export default ({
     addJoinedServer,
+    setDetails,
+    setHeader,
 }: {
     addJoinedServer: (server: Server) => void;
+    setDetails: (elem?: JSX.Element) => void;
+    setHeader?: (elem: JSX.Element) => void;
 }) => {
     const [query, setQuery] = createSignal("");
     const [servers, setServers] = createSignal<Server[]>([]);

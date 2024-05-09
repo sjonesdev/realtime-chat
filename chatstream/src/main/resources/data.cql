@@ -23,12 +23,12 @@ CREATE TABLE IF NOT EXISTS channels (
 CREATE INDEX IF NOT EXISTS serveridx ON channels (server_id);
 
 CREATE TABLE IF NOT EXISTS messages (
-    id timeuuid PRIMARY KEY,
+    id timeuuid,
     sender_id timeuuid,
     channel_id timeuuid,
-    message text
-);
-CREATE INDEX IF NOT EXISTS channelidx ON messages (channel_id);
+    message text,
+    PRIMARY KEY (channel_id, id)
+) WITH CLUSTERING ORDER BY (id ASC);
 
 CREATE TABLE IF NOT EXISTS users (
     id timeuuid PRIMARY KEY,
