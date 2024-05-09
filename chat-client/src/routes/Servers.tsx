@@ -13,6 +13,7 @@ import { useTheme } from "@suid/material";
 import Stack from "@suid/material/Stack";
 import Button from "@suid/material/Button";
 import Box from "@suid/material/Box";
+import Typography from "@suid/material/Typography";
 
 import { AuthContext } from "../components/auth-context";
 import ServerBrowser from "../components/ServerBrowser";
@@ -112,6 +113,7 @@ export default function Servers() {
                 justifyContent="space-between"
                 overflow="hidden"
             >
+                <Typography textAlign="center">Servers</Typography>
                 <Stack overflow="scroll">
                     <For each={joinedServers()}>
                         {(server) => (
