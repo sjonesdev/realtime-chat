@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.constants.KafkaConstants;
 import com.samjones329.model.ChatChannel;
 import com.samjones329.model.ChatMessage;
@@ -99,8 +99,8 @@ public class ChatServerController {
             @RequestBody ServerRequest serverRequest) {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
-            var serverId = UUIDs.timeBased();
-            ChatChannel defaultChannel = new ChatChannel(UUIDs.timeBased(), serverId, "Default");
+            var serverId = Uuids.timeBased();
+            ChatChannel defaultChannel = new ChatChannel(Uuids.timeBased(), serverId, "Default");
             defaultChannel = channelRepo.save(defaultChannel);
 
             kafkaAdmin.createOrModifyTopics(
@@ -188,7 +188,7 @@ public class ChatServerController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            var channel = channelRepo.save(new ChatChannel(UUIDs.timeBased(), id, request.name()));
+            var channel = channelRepo.save(new ChatChannel(Uuids.timeBased(), id, request.name()));
             kafkaAdmin.createOrModifyTopics(
                     TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + channel.getId().toString()).build());
 
@@ -246,6 +246,12 @@ public class ChatServerController {
             }
 
             var messages = msgRepo.findByChannelIdOrderByIdAsc(id);
+            logger.info("Messages:");
+            for (var message : messages) {
+                logger.info(String.format("\tChatMessage[id=%s,channelId=%s,senderId=%s,message=\"%s\",createdAt=%s]",
+                        message.getId(), message.getChannelId(), message.getSenderId(), message.getMessage(),
+                        message.getCreatedAt()));
+            }
             return new ResponseEntity<>(messages, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error getting messages for channel id=" + id, e);

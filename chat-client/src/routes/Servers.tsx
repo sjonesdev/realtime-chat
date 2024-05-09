@@ -92,7 +92,7 @@ export default function Servers() {
             gridTemplateAreas={`"serversidebar header header"
                     "serversidebar main detailsidebar"`}
             gridTemplateColumns={"10rem 1fr 15rem"}
-            gridTemplateRows={"2rem 1fr"}
+            gridTemplateRows={"2.5rem 1fr"}
             height={`calc(100vh - ${APPBAR_HEIGHT} - 2 * ${BODY_MARGIN})`}
             paddingTop={1}
             boxSizing="border-box"
@@ -160,7 +160,7 @@ export default function Servers() {
                     />
                 </Show>
             </Box>
-            <Box gridArea="detailsidebar" padding={1}>
+            <Box gridArea="detailsidebar" overflow="hidden" padding={1}>
                 {detailsElement()}
             </Box>
         </Box>

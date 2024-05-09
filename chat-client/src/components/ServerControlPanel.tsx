@@ -18,7 +18,7 @@ import {
     fetchChannels,
     type Server,
 } from "../lib/chat-api-client";
-import { TextFields } from "@suid/icons-material";
+import { CloudOff, Stream, TextFields } from "@suid/icons-material";
 import Stack from "@suid/material/Stack";
 
 export default ({
@@ -48,6 +48,31 @@ export default ({
         for (let i = 0; i < newChannels.length; i++) {
             if (newChannels[i].id === initChannel ?? server.defaultChannelId) {
                 setChannel(i);
+                setHeader(
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                    >
+                        <Stack direction="row" alignItems="center">
+                            <TextFields fontSize="small" />
+                            <Typography variant="body2" component="h2">
+                                {channels()[channel()].name}
+                            </Typography>
+                        </Stack>
+
+                        <Stack direction="row" alignItems="center">
+                            {connected() ? (
+                                <Stream fontSize="small" color="success" />
+                            ) : (
+                                <CloudOff fontSize="small" color="error" />
+                            )}
+                            <Typography variant="body2">
+                                {connected() ? "" : "Not "}Connected
+                            </Typography>
+                        </Stack>
+                    </Stack>
+                );
                 return;
             }
         }
@@ -66,21 +91,6 @@ export default ({
                                             `/servers/${server!.id}/${
                                                 channel.id
                                             }`
-                                        );
-                                        setHeader(
-                                            <Stack
-                                                direction="row"
-                                                justifyContent="space-between"
-                                            >
-                                                <Typography>
-                                                    <TextFields />
-                                                    {channel.name}
-                                                </Typography>
-                                                <Typography>
-                                                    {connected() ? "" : "Not "}
-                                                    Connected
-                                                </Typography>
-                                            </Stack>
                                         );
                                     }
                                 }}

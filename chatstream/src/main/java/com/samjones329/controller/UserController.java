@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.model.User;
 import com.samjones329.repository.UserRepository;
 import com.samjones329.service.UserDetailsServiceImpl;
@@ -67,7 +67,7 @@ public class UserController {
                 return new ResponseEntity<>(HttpStatus.CONFLICT);
             // BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             String encodedPassword = passwordEncoder.encode(userRequest.password);
-            User user = new User(UUIDs.timeBased(), userRequest.username, userRequest.email, encodedPassword,
+            User user = new User(Uuids.timeBased(), userRequest.username, userRequest.email, encodedPassword,
                     List.of());
             User savedUser = userRepo.save(user);
             return new ResponseEntity<>(
