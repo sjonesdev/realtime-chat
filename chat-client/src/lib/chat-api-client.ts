@@ -55,17 +55,17 @@ export async function fetchServers({
     ).json();
 }
 
-export async function postServer(name: string): Promise<Server> {
-    return (
-        await fetch(`${BASE_URL}/servers`, {
-            method: "post",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-                name,
-            }),
-        })
-    ).json();
+export async function postServer(name: string): Promise<Server | null> {
+    const res = await fetch(`${BASE_URL}/servers`, {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+            name,
+        }),
+    });
+    if (!res.ok) return null;
+    return res.json();
 }
 
 export async function fetchChannels(serverId: string): Promise<Channel[]> {

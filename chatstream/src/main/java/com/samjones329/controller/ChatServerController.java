@@ -1,5 +1,6 @@
 package com.samjones329.controller;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -120,8 +121,10 @@ public class ChatServerController {
                 serverIds = List.of(server.getId());
                 user.setServerIds(serverIds);
             } else {
-                serverIds.add(defaultChannel.getId());
+                serverIds = new ArrayList<>(serverIds);
+                serverIds.add(server.getId());
             }
+            user.setServerIds(serverIds);
             userRepo.save(user);
 
             return new ResponseEntity<>(server, HttpStatus.CREATED);

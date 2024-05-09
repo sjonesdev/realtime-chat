@@ -7,6 +7,7 @@ import { register } from "../lib/user-client";
 import { Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { AuthContext } from "../components/auth-context";
+import Link from "@suid/material/Link";
 
 export default () => {
     const [email, setEmail] = createSignal("");
@@ -30,7 +31,7 @@ export default () => {
                 component="form"
                 alignItems="center"
                 gap={1}
-                sx={{ [`& ${TextField}`]: { m: 1, width: "30ch" } }}
+                sx={{ [`& ${TextField}`]: { m: 1, width: "40ch" } }}
                 onSubmit={(e) => {
                     e.preventDefault();
                     if (password() !== matchPassword()) {
@@ -80,6 +81,9 @@ export default () => {
                     <Typography color="error">{error()}</Typography>
                 </Show>
             </Stack>
+            <Typography>
+                Already signed up? Login <Link href="/login">here</Link>
+            </Typography>
         </Stack>
     );
 };

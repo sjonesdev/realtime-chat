@@ -9,6 +9,7 @@ import { useNavigate } from "@solidjs/router";
 import { Show } from "solid-js";
 import { useContext } from "solid-js";
 import { AuthContext } from "../components/auth-context";
+import Link from "@suid/material/Link";
 
 export default () => {
     const [email, setEmail] = createSignal("");
@@ -31,7 +32,7 @@ export default () => {
                 component="form"
                 alignItems="center"
                 gap={1}
-                sx={{ [`& ${TextField}`]: { m: 1, width: "100ch" } }}
+                sx={{ [`& ${TextField}`]: { m: 1, width: "40ch" } }}
                 onSubmit={(e) => {
                     e.preventDefault();
                     login(email(), password())
@@ -73,6 +74,9 @@ export default () => {
                     </Typography>
                 </Show>
             </Stack>
+            <Typography>
+                Not signed up? Register <Link href="/register">here</Link>
+            </Typography>
         </Stack>
     );
 };

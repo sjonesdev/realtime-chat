@@ -14,9 +14,11 @@ import {
     Stack,
     Toolbar,
     Typography,
+    useTheme,
 } from "@suid/material";
 import AccountCircle from "@suid/icons-material/AccountCircle";
 import { useLocation, useNavigate } from "@solidjs/router";
+import { APPBAR_HEIGHT } from "./lib/style-constants";
 
 export default (props: { children?: JSX.Element }) => {
     const loc = useLocation();
@@ -27,11 +29,12 @@ export default (props: { children?: JSX.Element }) => {
         setAnchorEl(null);
     };
     const navigate = useNavigate();
+    const theme = useTheme();
 
     return (
         <>
             <AppBar position="static">
-                <Toolbar sx={{ gap: 2 }}>
+                <Toolbar sx={{ gap: 2, height: APPBAR_HEIGHT }}>
                     <Typography
                         color="inherit"
                         href="/"

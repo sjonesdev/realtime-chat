@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS servers (
     channel_ids list<timeuuid>,
     member_ids list<timeuuid>
 );
-CREATE INDEX IF NOT EXISTS servernameidx ON servers (name);
+CREATE CUSTOM INDEX IF NOT EXISTS servernamecustomidx ON servers (name)
+USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
 CREATE TABLE IF NOT EXISTS channels (
     id timeuuid PRIMARY KEY,

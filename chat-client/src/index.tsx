@@ -9,9 +9,13 @@ import Servers from "./routes/Servers";
 import { fetchAuth } from "./lib/user-client";
 import { AuthProvider } from "./components/auth-context";
 import Test from "./routes/Test";
+import { BODY_MARGIN } from "./lib/style-constants";
+import "./App.css";
 
 const user = await fetchAuth();
 console.log("User: ", user);
+
+document.querySelector("body")!.style.margin = BODY_MARGIN;
 
 render(
     () => (

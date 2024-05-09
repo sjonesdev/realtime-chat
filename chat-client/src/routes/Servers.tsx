@@ -1,21 +1,25 @@
 import {
-    Match,
     Show,
-    Switch,
     createEffect,
-    createMemo,
     createSignal,
+    For,
+    useContext,
+    onMount,
 } from "solid-js";
-import { type Server, fetchServers, postServer } from "../lib/chat-api-client";
-import { Button, Container } from "@suid/material";
-import { For } from "solid-js";
-import { onMount } from "solid-js";
-import { useContext } from "solid-js";
-import { AuthContext } from "../components/auth-context";
 import { useNavigate, useParams } from "@solidjs/router";
+
+import { useTheme } from "@suid/material";
+import Stack from "@suid/material/Stack";
+import Button from "@suid/material/Button";
+import Box from "@suid/material/Box";
+
+import { AuthContext } from "../components/auth-context";
 import ServerBrowser from "../components/ServerBrowser";
 import CreateServer from "../components/CreateServer";
 import ServerControlPanel from "../components/ServerControlPanel";
+
+import { type Server, fetchServers } from "../lib/chat-api-client";
+import { APPBAR_HEIGHT, BODY_MARGIN } from "../lib/style-constants";
 
 export default function Servers() {
     const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
@@ -25,6 +29,7 @@ export default function Servers() {
     const navigate = useNavigate();
     const params = useParams<{ serverId?: string; channelId?: string }>();
     const [server, setServer] = createSignal<number>(-1);
+    const theme = useTheme();
 
     onMount(async () => {
         if (!userState.user) navigate("/login");
@@ -64,36 +69,72 @@ export default function Servers() {
     };
 
     return (
-        <Container>
-            <CreateServer addJoinedServer={addJoinedServer} />
-            <For each={joinedServers()}>
-                {(server) => (
-                    <Button
-                        onClick={() => {
-                            navigate(
-                                `/servers/${server.id}/${server.defaultChannelId}`
-                            );
-                        }}
-                    >{`${server.name}`}</Button>
-                )}
-            </For>
-            <Show when={!params.serverId} keyed>
-                <ServerBrowser addJoinedServer={addJoinedServer} />
-            </Show>
-            <Show
-                when={
-                    params.serverId &&
-                    params.channelId &&
-                    server() >= 0 &&
-                    joinedServers() &&
-                    joinedServers().length
-                }
+        <Box
+            displayRaw="grid"
+            gridTemplateAreas={`"serversidebar header header"
+                    "serversidebar main detailsidebar"`}
+            gridTemplateColumns={"10rem 1fr 15rem"}
+            gridTemplateRows={"2rem 1fr"}
+            height={`calc(100vh - ${APPBAR_HEIGHT} - 2 * ${BODY_MARGIN})`}
+            paddingTop={1}
+            boxSizing="border-box"
+        >
+            <Box
+                gridArea="header"
+                padding={1}
+                borderBottom={`1px solid ${theme.palette.primary.light}`}
             >
-                <ServerControlPanel
-                    server={joinedServers()[server()]}
-                    initChannel={params.channelId}
-                />
-            </Show>
-        </Container>
+                Header
+            </Box>
+            <Box
+                gridArea="serversidebar"
+                padding={1}
+                borderRight={`1px solid ${theme.palette.primary.light}`}
+                displayRaw="flex"
+                flexDirection="column"
+                justifyContent="space-between"
+            >
+                <Stack>
+                    <For each={joinedServers()}>
+                        {(server) => (
+                            <Button
+                                onClick={() => {
+                                    navigate(
+                                        `/servers/${server.id}/${server.defaultChannelId}`
+                                    );
+                                }}
+                            >{`${server.name}`}</Button>
+                        )}
+                    </For>
+                </Stack>
+                <CreateServer addJoinedServer={addJoinedServer} />
+            </Box>
+            <Box
+                gridArea="main"
+                padding={1}
+                borderRight={`1px solid ${theme.palette.primary.light}`}
+            >
+                <Show
+                    when={
+                        params.serverId &&
+                        params.channelId &&
+                        server() >= 0 &&
+                        joinedServers() &&
+                        joinedServers().length
+                    }
+                    fallback={
+                        <ServerBrowser addJoinedServer={addJoinedServer} />
+                    }
+                >
+                    <ServerControlPanel
+                        server={joinedServers()[server()]}
+                        initChannel={params.channelId}
+                    />
+                </Show>
+            </Box>
+            <Box gridArea="detailsidebar" padding={1}>
+                Details
+            </Box>
+        </Box>
     );
 }
