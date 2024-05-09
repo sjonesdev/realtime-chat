@@ -110,8 +110,9 @@ export default function Servers() {
                 displayRaw="flex"
                 flexDirection="column"
                 justifyContent="space-between"
+                overflow="hidden"
             >
-                <Stack>
+                <Stack overflow="scroll">
                     <For each={joinedServers()}>
                         {(server) => (
                             <Button
