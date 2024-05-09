@@ -130,6 +130,7 @@ export default function Servers() {
             <Box
                 gridArea="main"
                 padding={1}
+                overflow="hidden"
                 borderRight={`1px solid ${theme.palette.primary.light}`}
             >
                 <Show

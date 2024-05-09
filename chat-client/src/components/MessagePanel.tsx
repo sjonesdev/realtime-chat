@@ -124,7 +124,7 @@ export default function MessagePanel({
 
     return (
         <Stack height="100%" justifyContent="flex-end">
-            <List>
+            <List sx={{ overflow: "scroll" }}>
                 <For each={messages()}>
                     {(item) => (
                         <ListItem>
