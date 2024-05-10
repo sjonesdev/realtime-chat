@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal } from "solid-js";
+import { For, Setter, Show, createEffect, createSignal } from "solid-js";
 
 import IconButton from "@suid/material/IconButton";
 import List from "@suid/material/List";
@@ -15,13 +15,13 @@ import ListItemText from "@suid/material/ListItemText";
 import Divider from "@suid/material/Divider";
 import type { JSX } from "solid-js/jsx-runtime";
 
-export default ({
+const ServerBrowser = ({
     addJoinedServer,
     setDetails,
     setHeader,
 }: {
     addJoinedServer: (server: Server) => void;
-    setDetails: (elem?: JSX.Element) => void;
+    setDetails: (elem: JSX.Element) => void;
     setHeader?: (elem: JSX.Element) => void;
 }) => {
     const [query, setQuery] = createSignal("");
@@ -82,3 +82,5 @@ export default ({
         </Stack>
     );
 };
+
+export default ServerBrowser;

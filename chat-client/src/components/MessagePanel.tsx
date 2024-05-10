@@ -1,49 +1,43 @@
-import Button from "@suid/material/Button";
+import { For, createSignal, onMount, useContext } from "solid-js";
 import { Client } from "@stomp/stompjs";
-import { createSignal, onMount, useContext } from "solid-js";
-import { User, fetchUser, fetchUsers } from "../lib/user-client";
-import { Switch } from "solid-js";
-import { Match } from "solid-js";
-import {
-    IconButton,
-    List,
-    ListItem,
-    ListItemText,
-    Stack,
-    TextField,
-    Typography,
-} from "@suid/material";
-import { For } from "solid-js";
-import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
-import { AuthContext } from "./auth-context";
+
+import IconButton from "@suid/material/IconButton";
+import List from "@suid/material/List";
+import ListItem from "@suid/material/ListItem";
+import ListItemText from "@suid/material/ListItemText";
+import Stack from "@suid/material/Stack";
+import TextField from "@suid/material/TextField";
+import Typography from "@suid/material/Typography";
 import { Send } from "@suid/icons-material";
+
+import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
+import type { User } from "../lib/user-client";
+import { AuthContext } from "./auth-context";
 
 export default function MessagePanel({
     channel,
     setConnected,
+    users,
 }: {
     channel: Channel;
     setConnected: (connected: boolean) => void;
+    users: User[];
 }) {
     const [messages, setMessages] = createSignal<Message[]>([], {
-        equals: false,
-    });
-    const [users, setUsers] = createSignal(new Map<string, User>(), {
         equals: false,
     });
     const [messageDraft, setMessageDraft] = createSignal("");
     const [userState] = useContext(AuthContext);
 
+    const usersMap = new Map<string, User>();
+    for (const user of users) {
+        usersMap.set(user.id, user);
+    }
+
     onMount(async () => {
         const messages = await fetchMessages(channel.id);
         console.log("Got messages", messages);
         setMessages(messages);
-        const users = await fetchUsers(messages.map((msg) => msg.senderId));
-        console.log("Got users", users);
-        setUsers((prev) => {
-            users.forEach((user) => prev.set(user.id, user));
-            return prev;
-        });
         stompClient.activate();
     });
 
@@ -69,10 +63,6 @@ export default function MessagePanel({
             async (chatMessage) => {
                 console.log(chatMessage);
                 const msg = parseMsg(chatMessage.body);
-                if (!users().has(msg.senderId)) {
-                    const user = await fetchUser(msg.senderId);
-                    setUsers((users) => users.set(msg.senderId, user));
-                }
                 setMessages((prev) => {
                     prev.push(msg);
                     return prev;
@@ -84,18 +74,6 @@ export default function MessagePanel({
             async (messagesUpdate) => {
                 console.log("chatUpdateResponse", messagesUpdate);
                 const msg = parseMsgUpdate(messagesUpdate.body);
-                const curUsers = users();
-                const newUsers: User[] = [];
-                for (const message of msg.messages) {
-                    if (!curUsers.has(message.senderId)) {
-                        const user = await fetchUser(message.senderId);
-                        newUsers.push(user);
-                    }
-                }
-                setUsers((prev) => {
-                    newUsers.forEach((user) => prev.set(user.id, user));
-                    return prev;
-                });
                 setMessages((prev) => prev.concat(msg.messages));
             }
         );
@@ -131,7 +109,7 @@ export default function MessagePanel({
                             <ListItemText
                                 primary={
                                     <>
-                                        {users().get(item.senderId)?.username}{" "}
+                                        {usersMap.get(item.senderId)?.username}{" "}
                                         <Typography variant="caption">
                                             {new Date(
                                                 item.createdAt

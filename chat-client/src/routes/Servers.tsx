@@ -24,6 +24,7 @@ import { type Server, fetchServers } from "../lib/chat-api-client";
 import { APPBAR_HEIGHT, BODY_MARGIN } from "../lib/style-constants";
 import DefaultDetails from "../components/DefaultDetails";
 import DefaultHeader from "../components/DefaultHeader";
+import TTabs from "../components/TTabs";
 
 export default function Servers() {
     const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
@@ -39,6 +40,7 @@ export default function Servers() {
         <DefaultDetails />
     );
     const setDetailsElementProxy = (elem?: JSX.Element) => {
+        console.log("Setting details");
         if (elem) setDetailsElement(elem);
         else setDetailsElement(<DefaultDetails />);
     };
