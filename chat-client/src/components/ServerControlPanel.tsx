@@ -24,7 +24,7 @@ import {
 import { CloudOff, Stream, TextFields } from "@suid/icons-material";
 import Stack from "@suid/material/Stack";
 import { fetchUsers, type User } from "../lib/user-client";
-import TTabs from "./TTabs";
+import Tabs from "./Tabs";
 
 const ServerControlPanel = ({
     server,
@@ -114,7 +114,7 @@ const ServerControlPanel = ({
             </For>
         );
         setDetails(
-            <TTabs
+            <Tabs
                 tabs={[
                     { label: "Channels", panel: channelsPanel },
                     { label: "Users", panel: usersPanel },

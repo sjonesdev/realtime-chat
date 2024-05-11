@@ -1,36 +1,52 @@
+import { useTheme } from "@suid/material";
+import Button from "@suid/material/Button";
 import Stack from "@suid/material/Stack";
-import { createSignal, type JSX } from "solid-js";
-import TabContext, { TabContextType, TabState } from "./TabContext";
-import { createStore } from "solid-js/store";
+import { For, JSX, createSignal } from "solid-js";
 
-export default ({ children }: { children?: JSX.Element }) => {
-    const [tabState, setTabState] = createStore<TabState>({
-        selectedTab: null,
-        selectedTabPanel: <></>,
-    });
-
-    const context: TabContextType = [
-        tabState,
-        {
-            setSelectedTab: (
-                tabValue: number | string,
-                tabPanel: JSX.Element
-            ) => {
-                console.debug(
-                    `setSelectedTab(tabValue=${tabValue}, tabPanel=${tabPanel})`
-                );
-                setTabState("selectedTab", tabValue);
-                setTabState("selectedTabPanel", tabPanel);
-            },
-        },
-    ];
-
+const Tabs = (props: {
+    tabs: { label: JSX.Element; panel: JSX.Element }[];
+}) => {
+    const [selectedIdx, setSelectedIdx] = createSignal(0);
+    const theme = useTheme();
     return (
-        <TabContext.Provider value={context}>
-            <Stack direction="row">{children}</Stack>
-            <Stack overflow="scroll" alignItems="start">
-                {tabState.selectedTabPanel}
+        <>
+            <Stack direction="row" gap={1}>
+                <For each={props.tabs}>
+                    {(tab, idx) => (
+                        <Button
+                            sx={{
+                                flexBasis: 0,
+                                flexGrow: 1,
+                                color:
+                                    selectedIdx() === idx()
+                                        ? theme.palette.primary.main
+                                        : "black",
+                                borderBottom: `2px solid ${
+                                    selectedIdx() === idx()
+                                        ? theme.palette.primary.main
+                                        : "grey"
+                                }`,
+                                marginX: "2px",
+                                borderRadius: 0,
+                            }}
+                            onClick={() => {
+                                setSelectedIdx(idx());
+                            }}
+                        >
+                            {tab.label}
+                        </Button>
+                    )}
+                </For>
             </Stack>
-        </TabContext.Provider>
+            <Stack overflow="scroll" alignItems="start">
+                {props.tabs.length > 0 ? (
+                    props.tabs[selectedIdx()].panel
+                ) : (
+                    <>No details</>
+                )}
+            </Stack>
+        </>
     );
 };
+
+export default Tabs;

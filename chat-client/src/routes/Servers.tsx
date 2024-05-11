@@ -24,7 +24,7 @@ import { type Server, fetchServers } from "../lib/chat-api-client";
 import { APPBAR_HEIGHT, BODY_MARGIN } from "../lib/style-constants";
 import DefaultDetails from "../components/DefaultDetails";
 import DefaultHeader from "../components/DefaultHeader";
-import TTabs from "../components/TTabs";
+import Tabs from "../components/Tabs";
 
 export default function Servers() {
     const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
