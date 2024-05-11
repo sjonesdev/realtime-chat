@@ -1,19 +1,11 @@
-import {
-    For,
-    type JSX,
-    Show,
-    createSignal,
-    onMount,
-    createEffect,
-    Match,
-    Switch,
-    Setter,
-} from "solid-js";
+import { For, type JSX, Show, createSignal, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
 import Button from "@suid/material/Button";
 import Typography from "@suid/material/Typography";
+import Stack from "@suid/material/Stack";
 import { CircularProgress, useTheme } from "@suid/material";
+import { CloudOff, Stream, TextFields } from "@suid/icons-material";
 
 import MessagePanel from "./MessagePanel";
 import {
@@ -21,8 +13,6 @@ import {
     fetchChannels,
     type Server,
 } from "../lib/chat-api-client";
-import { CloudOff, Stream, TextFields } from "@suid/icons-material";
-import Stack from "@suid/material/Stack";
 import { fetchUsers, type User } from "../lib/user-client";
 import Tabs from "./Tabs";
 

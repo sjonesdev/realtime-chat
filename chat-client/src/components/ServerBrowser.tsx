@@ -1,19 +1,16 @@
-import { For, Setter, Show, createEffect, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal, type JSX } from "solid-js";
 
 import IconButton from "@suid/material/IconButton";
 import List from "@suid/material/List";
 import ListItem from "@suid/material/ListItem";
 import Stack from "@suid/material/Stack";
 import TextField from "@suid/material/TextField";
-import Typography from "@suid/material/Typography";
 import Button from "@suid/material/Button";
 import SearchIcon from "@suid/icons-material/Search";
-
-import { fetchServers, type Server } from "../lib/chat-api-client";
-import ListItemButton from "@suid/material/ListItemButton";
 import ListItemText from "@suid/material/ListItemText";
 import Divider from "@suid/material/Divider";
-import type { JSX } from "solid-js/jsx-runtime";
+
+import { fetchServers, type Server } from "../lib/chat-api-client";
 
 const ServerBrowser = ({
     addJoinedServer,
