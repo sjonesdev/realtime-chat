@@ -6,25 +6,25 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.samjones329.model.ChatUserDetails;
-import com.samjones329.repository.UserRepository;
+import com.samjones329.model.UserDetailsImpl;
+import com.samjones329.repository.UserRepo;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
-    private UserRepository userRepo;
+    private UserRepo userRepo;
 
     @Override
-    public ChatUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetailsImpl loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = userRepo.findByEmail(username);
         if (user.isEmpty())
             throw new UsernameNotFoundException("No user with email " + username);
-        return new ChatUserDetails(user.get());
+        return new UserDetailsImpl(user.get());
     }
 
-    public ChatUserDetails getDetailsFromContext(SecurityContext context) {
-        return (ChatUserDetails) context.getAuthentication().getPrincipal();
+    public UserDetailsImpl getDetailsFromContext(SecurityContext context) {
+        return (UserDetailsImpl) context.getAuthentication().getPrincipal();
     }
 
 }

@@ -22,36 +22,36 @@ import org.springframework.stereotype.Controller;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.constants.KafkaConstants;
-import com.samjones329.model.ChatMessage;
-import com.samjones329.repository.ChatChannelRepository;
-import com.samjones329.repository.ChatMessageRepository;
-import com.samjones329.repository.ChatServerRepository;
+import com.samjones329.model.Message;
+import com.samjones329.repository.ChannelRepo;
+import com.samjones329.repository.MessageRepo;
+import com.samjones329.repository.ServerRepo;
 import com.samjones329.service.UserDetailsServiceImpl;
 
 @Controller
-public class ChatMessageController {
+public class MessageController {
 
     @Autowired
-    private KafkaTemplate<String, ChatMessage> kafkaTemplate;
+    private KafkaTemplate<String, Message> kafkaTemplate;
 
     @Autowired
     SimpMessagingTemplate template;
 
     @Autowired
-    ChatMessageRepository messageRepo;
+    MessageRepo messageRepo;
 
     @Autowired
-    ChatChannelRepository channelRepo;
+    ChannelRepo channelRepo;
 
     @Autowired
-    ChatServerRepository serverRepo;
+    ServerRepo serverRepo;
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
-    Logger logger = LoggerFactory.getLogger(ChatMessageController.class);
+    Logger logger = LoggerFactory.getLogger(MessageController.class);
 
-    public record ChatUpdateResponse(UUID channelId, List<ChatMessage> newMessages) {
+    public record ChatUpdateResponse(UUID channelId, List<Message> newMessages) {
     }
 
     public record ChatUpdateError(String message) {
@@ -62,7 +62,7 @@ public class ChatMessageController {
     public ChatUpdateResponse connectToChat(@DestinationVariable("channelId") UUID channelId,
             Date since) {
         System.out.println("Chat Update Request");
-        List<ChatMessage> messages = messageRepo.getLatestChatMessages(since, channelId);
+        List<Message> messages = messageRepo.getLatestChatMessages(since, channelId);
         return new ChatUpdateResponse(channelId, messages);
     }
 
@@ -75,19 +75,18 @@ public class ChatMessageController {
 
     @MessageMapping("/chat/{channelId}")
     public void chatMessage(Principal principal,
-            @DestinationVariable("channelId") UUID channelId, ChatMessage message) {
+            @DestinationVariable("channelId") Long channelId, Message message) {
         try {
             logger.info("Session principal name: " + principal.getName());
 
             // check permissions
             var channel = channelRepo.findById(channelId).get(); // will throw error if channel not exist
-            var server = serverRepo.findById(channel.getServerId()).get();
             var user = userDetailsService.loadUserByUsername(principal.getName()).getUser();
-            if (!server.getMemberIds().contains(user.getId()))
+            if (!channel.getServer().getMembers().contains(user))
                 throw new RuntimeException("User cannot message in unjoined server");
             // Sending the message to kafka topic queue
-            ChatMessage savedMessage = messageRepo
-                    .save(new ChatMessage(Uuids.timeBased(), channelId, user.getId(), message.getMessage()));
+            Message savedMessage = messageRepo
+                    .save(new Message(Uuids.timeBased(), channelId, user.getId(), message.getMessage()));
             System.out.println("Saved message: " + savedMessage);
             kafkaTemplate
                     .send(KafkaConstants.KAFKA_TOPIC_BASE + "." + channelId.toString(), savedMessage)
@@ -98,7 +97,7 @@ public class ChatMessageController {
     }
 
     @KafkaListener(topicPattern = KafkaConstants.KAFKA_TOPIC_BASE + "[.].*", groupId = KafkaConstants.GROUP_ID)
-    public void listen(ChatMessage message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    public void listen(Message message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         System.out.println(topic + ": prepend with topic. and send via kafka listener..");
         template.convertAndSend("topic/" + topic.replace('.', '/'), message);
     }

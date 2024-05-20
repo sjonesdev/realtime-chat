@@ -55,13 +55,17 @@ export async function fetchServers({
     ).json();
 }
 
-export async function postServer(name: string): Promise<Server | null> {
+export async function postServer(
+    name: string,
+    description: string
+): Promise<Server | null> {
     const res = await fetch(`${BASE_URL}/servers`, {
         method: "post",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
             name,
+            description,
         }),
     });
     if (!res.ok) return null;
@@ -74,4 +78,15 @@ export async function fetchChannels(serverId: string): Promise<Channel[]> {
             credentials: "include",
         })
     ).json();
+}
+
+/** Returns true if successfully joined, false otherwise */
+export async function joinServer(serverId: string): Promise<boolean> {
+    const res = await fetch(`${BASE_URL}/servers/${serverId}/join`, {
+        method: "post",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+    });
+    if (res.ok) return true;
+    return false;
 }

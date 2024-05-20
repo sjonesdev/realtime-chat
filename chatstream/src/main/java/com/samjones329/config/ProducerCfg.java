@@ -14,14 +14,14 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.samjones329.constants.KafkaConstants;
-import com.samjones329.model.ChatMessage;
+import com.samjones329.model.Message;
 
 @EnableKafka
 @Configuration
-public class ProducerConfiguration {
+public class ProducerCfg {
 
     @Bean
-    public ProducerFactory<String, ChatMessage> producerFactory() {
+    public ProducerFactory<String, Message> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfigurations());
     }
 
@@ -35,7 +35,7 @@ public class ProducerConfiguration {
     }
 
     @Bean
-    public KafkaTemplate<String, ChatMessage> kafkaTemplate() {
+    public KafkaTemplate<String, Message> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

@@ -14,22 +14,22 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import com.samjones329.constants.KafkaConstants;
-import com.samjones329.model.ChatMessage;
+import com.samjones329.model.Message;
 
 @EnableKafka
 @Configuration
-public class ListenerConfig {
+public class ListenerCfg {
     @Bean
-    ConcurrentKafkaListenerContainerFactory<String, ChatMessage> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, ChatMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    ConcurrentKafkaListenerContainerFactory<String, Message> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Message> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
 
     @Bean
-    public ConsumerFactory<String, ChatMessage> consumerFactory() {
+    public ConsumerFactory<String, Message> consumerFactory() {
         return new DefaultKafkaConsumerFactory<>(consumerConfigurations(), new StringDeserializer(),
-                new JsonDeserializer<>(ChatMessage.class));
+                new JsonDeserializer<>(Message.class));
     }
 
     @Bean

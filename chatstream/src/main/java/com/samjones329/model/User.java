@@ -1,78 +1,53 @@
 package com.samjones329.model;
 
-import java.util.UUID;
-import java.util.List;
+import java.util.Set;
 
-import org.springframework.data.cassandra.core.mapping.Column;
-import org.springframework.data.cassandra.core.mapping.Indexed;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-@Table("users")
+import java.util.Date;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Entity
+@Table(name = "users", indexes = { @Index(columnList = "email"), @Index(columnList = "username") })
 public class User {
-    @PrimaryKey
-    private UUID id;
 
-    @Indexed
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String username;
 
-    @Indexed
     private String email;
 
-    @Column("password_hash")
     private String passwordHash;
 
-    @Column("server_ids")
-    private List<UUID> serverIds;
+    private boolean enabled;
 
-    public User() {
-    }
+    private Date createdAt;
 
-    public User(UUID id, String username, String email, String passwordHash, List<UUID> serverIds) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.serverIds = serverIds;
-    }
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Server> ownedServers;
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public List<UUID> getServerIds() {
-        return serverIds;
-    }
-
-    public void setServerIds(List<UUID> serverIds) {
-        this.serverIds = serverIds;
-    }
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "users_joined_servers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "server_id"))
+    @JsonIgnore
+    private Set<Server> joinedServers;
 }

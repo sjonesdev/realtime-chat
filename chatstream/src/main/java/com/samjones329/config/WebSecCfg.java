@@ -25,7 +25,7 @@ import com.samjones329.service.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig {
+public class WebSecCfg {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,

@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal, type JSX } from "solid-js";
+import { For, Show, createSignal, onMount, type JSX } from "solid-js";
 
 import IconButton from "@suid/material/IconButton";
 import List from "@suid/material/List";
@@ -10,13 +10,16 @@ import SearchIcon from "@suid/icons-material/Search";
 import ListItemText from "@suid/material/ListItemText";
 import Divider from "@suid/material/Divider";
 
-import { fetchServers, type Server } from "../lib/chat-api-client";
+import { fetchServers, joinServer, type Server } from "../lib/chat-api-client";
+import Typography from "@suid/material/Typography";
 
 const ServerBrowser = ({
+    joinedServers,
     addJoinedServer,
     setDetails,
     setHeader,
 }: {
+    joinedServers: Server[];
     addJoinedServer: (server: Server) => void;
     setDetails: (elem: JSX.Element) => void;
     setHeader?: (elem: JSX.Element) => void;
@@ -24,12 +27,13 @@ const ServerBrowser = ({
     const [query, setQuery] = createSignal("");
     const [servers, setServers] = createSignal<Server[]>([]);
 
-    createEffect(async () => {
-        setServers(await fetchServers({ nameContaining: query() }));
+    onMount(async () => {
+        setServers(await fetchServers({}));
+        setDetails(<Typography>Select a server for more details</Typography>);
     });
 
     return (
-        <Stack gap={1}>
+        <Stack gap={1} height="100%">
             <Stack
                 component="form"
                 onSubmit={async (e) => {
@@ -47,7 +51,7 @@ const ServerBrowser = ({
                     <SearchIcon />
                 </IconButton>
             </Stack>
-            <List>
+            <List sx={{ overflow: "scroll" }}>
                 <For each={servers()}>
                     {(server, idx) => (
                         <>
@@ -62,14 +66,25 @@ const ServerBrowser = ({
                                     ).toLocaleDateString()}`}
                                 />
                                 <Button
-                                    onClick={(e) =>
-                                        console.log(
+                                    onClick={async (e) => {
+                                        console.debug(
                                             `I want to join ${server.name} id=${server.id}`
-                                        )
-                                    }
+                                        );
+                                        const res = await joinServer(server.id);
+                                        if (res) addJoinedServer(server);
+                                    }}
                                     variant="contained"
+                                    disabled={
+                                        joinedServers.findIndex(
+                                            (val) => val.id === server.id
+                                        ) >= 0
+                                    }
                                 >
-                                    Join
+                                    {joinedServers.findIndex(
+                                        (val) => val.id === server.id
+                                    ) >= 0
+                                        ? "Joined"
+                                        : "Join"}
                                 </Button>
                             </ListItem>
                         </>

@@ -15,6 +15,7 @@ export default ({
     addJoinedServer: (server: Server) => void;
 }) => {
     const [newServerName, setNewServerName] = createSignal("");
+    const [newServerDesc, setNewServerDesc] = createSignal("");
     const [open, setOpen] = createSignal(false);
     const theme = useTheme();
     const [error, setError] = createSignal("");
@@ -34,7 +35,7 @@ export default ({
                     onSubmit={(e) => {
                         e.preventDefault();
                         if (newServerName) {
-                            postServer(newServerName())
+                            postServer(newServerName(), newServerDesc())
                                 .then((val) => {
                                     if (val) {
                                         console.debug(
@@ -74,6 +75,12 @@ export default ({
                     <TextField
                         onChange={(e) =>
                             setNewServerName(e.currentTarget.value)
+                        }
+                        label="Name"
+                    ></TextField>
+                    <TextField
+                        onChange={(e) =>
+                            setNewServerDesc(e.currentTarget.value)
                         }
                         label="Name"
                     ></TextField>

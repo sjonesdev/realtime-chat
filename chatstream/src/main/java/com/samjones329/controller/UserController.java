@@ -1,8 +1,9 @@
 package com.samjones329.controller;
 
-import java.util.UUID;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.model.User;
-import com.samjones329.repository.UserRepository;
+import com.samjones329.repository.UserRepo;
 import com.samjones329.service.UserDetailsServiceImpl;
+import com.samjones329.view.UserSelfView;
+import com.samjones329.view.UserView;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,7 +42,7 @@ public class UserController {
     }
 
     @Autowired
-    UserRepository userRepo;
+    UserRepo userRepo;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -57,22 +59,25 @@ public class UserController {
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/register")
-    public ResponseEntity<SelfResponse> register(@RequestBody RegisterRequest userRequest) {
+    public ResponseEntity<UserSelfView> register(@RequestBody RegisterRequest req) {
         try {
-            var existingEmail = userRepo.findByEmail(userRequest.email());
+            var existingEmail = userRepo.findByEmail(req.email());
             if (existingEmail.isPresent())
                 return new ResponseEntity<>(HttpStatus.CONFLICT);
-            var existingUsername = userRepo.findByUsername(userRequest.username());
+            var existingUsername = userRepo.findByUsername(req.username());
             if (existingUsername.isPresent())
                 return new ResponseEntity<>(HttpStatus.CONFLICT);
-            // BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            String encodedPassword = passwordEncoder.encode(userRequest.password);
-            User user = new User(Uuids.timeBased(), userRequest.username, userRequest.email, encodedPassword,
-                    List.of());
-            User savedUser = userRepo.save(user);
+            String encodedPassword = passwordEncoder.encode(req.password);
+            var user = new User(null, req.username(), req.email(), encodedPassword, false, new Date(), Set.of(),
+                    Set.of());
+            user = userRepo.save(user);
+
+            var owned = new ArrayList<Long>();
+            for (var server : user.getOwnedServers()) {
+                owned.add(server.getId());
+            }
             return new ResponseEntity<>(
-                    new SelfResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(),
-                            savedUser.getServerIds()),
+                    new UserSelfView(user),
                     HttpStatus.OK);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -81,12 +86,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<SelfResponse> login(@CurrentSecurityContext SecurityContext securityContext,
-            @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<UserSelfView> login(@CurrentSecurityContext SecurityContext securityContext,
+            @RequestBody LoginRequest req) {
         try {
             // check user credentials
             Authentication authenticationRequest = UsernamePasswordAuthenticationToken
-                    .unauthenticated(loginRequest.email(), loginRequest.password());
+                    .unauthenticated(req.email(), req.password());
             Authentication authenticationResponse = this.authenticationManager.authenticate(authenticationRequest);
 
             // accessor to HttpServletRequest and HttpServletResponse
@@ -102,9 +107,13 @@ public class UserController {
             securityContextRepository.saveContext(securityContext, reqAttr.getRequest(), reqAttr.getResponse());
 
             // return user info
-            var user = userRepo.findByEmail(loginRequest.email()).get();
+            var user = userRepo.findByEmail(req.email()).get();
+            var owned = new ArrayList<Long>();
+            for (var server : user.getOwnedServers()) {
+                owned.add(server.getId());
+            }
             return new ResponseEntity<>(
-                    new SelfResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
+                    new UserSelfView(user),
                     HttpStatus.OK);
         } catch (Exception e) {
             if (e instanceof BadCredentialsException) {
@@ -118,30 +127,28 @@ public class UserController {
     public record LoginRequest(String email, String password) {
     }
 
-    public record SelfResponse(UUID id, String username, String email, List<UUID> serverIds) {
-    }
-
-    public record UserResponse(UUID id, String username) {
-    }
-
     @GetMapping("/authentication")
-    public ResponseEntity<SelfResponse> getAuthentication(
+    public ResponseEntity<UserSelfView> getAuthentication(
             @CurrentSecurityContext SecurityContext context) {
         var user = userDetailsService.getDetailsFromContext(context).getUser();
 
+        var owned = new ArrayList<Long>();
+        for (var server : user.getOwnedServers()) {
+            owned.add(server.getId());
+        }
         return new ResponseEntity<>(
-                new SelfResponse(user.getId(), user.getUsername(), user.getEmail(), user.getServerIds()),
+                new UserSelfView(user),
                 HttpStatus.OK);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable("id") UUID id) {
+    public ResponseEntity<UserView> getUser(@PathVariable("id") Long id) {
         try {
             var user = userRepo.findById(id);
             if (user.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(new UserResponse(id, user.get().getUsername()), HttpStatus.OK);
+            return new ResponseEntity<>(new UserView(user.get()), HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error getting user id=" + id, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -149,12 +156,12 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserResponse>> getUsers(@RequestParam List<UUID> ids) {
+    public ResponseEntity<List<UserView>> getUsers(@RequestParam List<Long> ids) {
         try {
             var users = userRepo.findAllById(ids);
-            var userResponses = new ArrayList<UserResponse>();
+            var userResponses = new ArrayList<UserView>();
             for (var user : users) {
-                userResponses.add(new UserResponse(user.getId(), user.getUsername()));
+                userResponses.add(new UserView(user));
             }
             return new ResponseEntity<>(userResponses, HttpStatus.OK);
         } catch (Exception e) {

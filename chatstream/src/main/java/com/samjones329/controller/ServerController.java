@@ -1,13 +1,15 @@
 package com.samjones329.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaAdmin;
@@ -23,32 +25,33 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.samjones329.constants.KafkaConstants;
-import com.samjones329.model.ChatChannel;
-import com.samjones329.model.ChatMessage;
-import com.samjones329.model.ChatServer;
-import com.samjones329.repository.ChatServerRepository;
-import com.samjones329.repository.UserRepository;
+import com.samjones329.model.Channel;
+import com.samjones329.model.Message;
+import com.samjones329.model.Server;
+import com.samjones329.repository.ServerRepo;
+import com.samjones329.repository.UserRepo;
 import com.samjones329.service.UserDetailsServiceImpl;
-import com.samjones329.repository.ChatChannelRepository;
-import com.samjones329.repository.ChatMessageRepository;
+import com.samjones329.view.ChannelView;
+import com.samjones329.view.ServerView;
+import com.samjones329.repository.ChannelRepo;
+import com.samjones329.repository.MessageRepo;
 
 @RestController
 @RequestMapping("/api")
-public class ChatServerController {
+public class ServerController {
 
     @Autowired
-    UserRepository userRepo;
+    UserRepo userRepo;
 
     @Autowired
-    ChatServerRepository serverRepo;
+    ServerRepo serverRepo;
 
     @Autowired
-    ChatChannelRepository channelRepo;
+    ChannelRepo channelRepo;
 
     @Autowired
-    ChatMessageRepository msgRepo;
+    MessageRepo msgRepo;
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -56,13 +59,13 @@ public class ChatServerController {
     @Autowired
     private KafkaAdmin kafkaAdmin;
 
-    Logger logger = LoggerFactory.getLogger(ChatServerController.class);
+    Logger logger = LoggerFactory.getLogger(ServerController.class);
 
     @GetMapping("/servers")
-    public ResponseEntity<List<ChatServer>> getAllServers(@RequestParam(required = false) String name,
-            @RequestParam(required = false) List<UUID> ids) {
+    public ResponseEntity<List<ServerView>> getAllServers(@RequestParam(required = false) String name,
+            @RequestParam(required = false) List<Long> ids) {
         try {
-            List<ChatServer> servers;
+            List<Server> servers;
             if (name != null && name.length() > 0) {
                 servers = serverRepo.findByNameContaining(name);
             } else if (ids != null && !ids.isEmpty()) {
@@ -71,7 +74,12 @@ public class ChatServerController {
             } else {
                 servers = serverRepo.findAll();
             }
-            return new ResponseEntity<>(servers, HttpStatus.OK);
+
+            List<ServerView> serverViews = new ArrayList<>(servers.size());
+            for (var server : servers) {
+                serverViews.add(new ServerView(server));
+            }
+            return new ResponseEntity<>(serverViews, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error at GET /servers with name " + name + " and ids " + ids, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -79,11 +87,11 @@ public class ChatServerController {
     }
 
     @GetMapping("/servers/{id}")
-    public ResponseEntity<ChatServer> getServer(@PathVariable("id") UUID id) {
+    public ResponseEntity<ServerView> getServer(@PathVariable("id") Long id) {
         try {
             var server = serverRepo.findById(id);
             if (server.isPresent())
-                return new ResponseEntity<>(server.get(), HttpStatus.OK);
+                return new ResponseEntity<>(new ServerView(server.get()), HttpStatus.OK);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             logger.error("Error at GET /servers/{id} with id " + id, e);
@@ -91,66 +99,71 @@ public class ChatServerController {
         }
     }
 
-    public record ServerRequest(String name) {
+    public record ServerRequest(String name, String description) {
     }
 
     @PostMapping("/servers")
-    public ResponseEntity<ChatServer> createServer(@CurrentSecurityContext SecurityContext securityContext,
-            @RequestBody ServerRequest serverRequest) {
+    public ResponseEntity<ServerView> createServer(@CurrentSecurityContext SecurityContext securityContext,
+            @RequestBody ServerRequest req) {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
-            var serverId = Uuids.timeBased();
-            ChatChannel defaultChannel = new ChatChannel(Uuids.timeBased(), serverId, "Default");
+
+            var server = new Server(null, req.name(), req.description(), new Date(), null,
+                    user, new HashSet<>(), new HashSet<>());
+            server.getMembers().add(user);
+            server = serverRepo.save(server);
+
+            user.getJoinedServers().add(server);
+            userRepo.save(user);
+
+            // add try catch to this later since it's not critical
+            Channel defaultChannel = new Channel(null, "Default", new Date(), server);
             defaultChannel = channelRepo.save(defaultChannel);
 
             kafkaAdmin.createOrModifyTopics(
                     TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + defaultChannel.getId().toString())
                             .build());
 
-            var server = new ChatServer(serverId, serverRequest.name(), user.getId(), defaultChannel.getId(),
-                    List.of(defaultChannel.getId()),
-                    List.of(user.getId()));
+            server.setDefaultChannel(defaultChannel);
+            // try {
+            // server.getChannels().add(defaultChannel);
+            // } catch (Exception e) {
+            // logger.info("Failed to add channel to server UnsupportedOperationException?"
+            // + (e instanceof UnsupportedOperationException));
+            // server.setChannels(new HashSet<>());
+            // server.getChannels().add(defaultChannel);
+            // }
             server = serverRepo.save(server);
+
             logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
-                    server.getId(), server.getName(), server.getOwnerId(), server.getChannelIds(),
-                    server.getMemberIds()));
+                    server.getId(), server.getName(), server.getName()/* getOwner().getId() */, server.getChannels(),
+                    server.getMembers()));
 
-            var serverIds = user.getServerIds();
-            if (serverIds == null) {
-                serverIds = List.of(server.getId());
-                user.setServerIds(serverIds);
-            } else {
-                serverIds = new ArrayList<>(serverIds);
-                serverIds.add(server.getId());
-            }
-            user.setServerIds(serverIds);
-            userRepo.save(user);
-
-            return new ResponseEntity<>(server, HttpStatus.CREATED);
+            return new ResponseEntity<>(new ServerView(server), HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error at POST /servers with " + serverRequest, e);
+            logger.error("Error at POST /servers with " + req, e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/servers/{id}")
-    public ResponseEntity<ChatServer> updateServer(@PathVariable("id") UUID id, @RequestBody ChatServer chatServer) {
+    public ResponseEntity<ServerView> updateServer(@PathVariable("id") Long id, @RequestBody Server serverReq) {
         try {
             var server = serverRepo.findById(id);
             if (server.isPresent()) {
-                chatServer.setId(id);
-                return new ResponseEntity<>(serverRepo.save(chatServer), HttpStatus.OK);
+                serverReq.setId(id);
+                return new ResponseEntity<>(new ServerView(serverRepo.save(serverReq)), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            logger.error("Error at PUT /servers/{id} with id " + id + " and update object " + chatServer, e);
+            logger.error("Error at PUT /servers/{id} with id " + id + " and update object " + serverReq, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/servers/{id}")
-    public ResponseEntity<HttpStatus> deleteServer(@PathVariable("id") UUID id) {
+    public ResponseEntity<HttpStatus> deleteServer(@PathVariable("id") Long id) {
         try {
             serverRepo.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -161,10 +174,14 @@ public class ChatServerController {
     }
 
     @GetMapping("/servers/{id}/channels")
-    public ResponseEntity<List<ChatChannel>> getChannels(@PathVariable("id") UUID id) {
+    public ResponseEntity<List<ChannelView>> getChannels(@PathVariable("id") Long id) {
         try {
-            var servers = channelRepo.findByServerId(id);
-            return new ResponseEntity<>(servers, HttpStatus.OK);
+            var channels = channelRepo.findByServerId(id);
+            List<ChannelView> channelViews = new ArrayList<>(channels.size());
+            for (var channel : channels) {
+                channelViews.add(new ChannelView(channel));
+            }
+            return new ResponseEntity<>(channelViews, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error at GET /servers/{id}/channels with id " + id, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -176,35 +193,36 @@ public class ChatServerController {
     }
 
     @PostMapping("/servers/{id}/channels")
-    public ResponseEntity<ChatChannel> createChannel(@CurrentSecurityContext SecurityContext context,
-            @PathVariable("id") UUID id, @RequestBody ChatChannelRequest request) {
+    public ResponseEntity<ChannelView> createChannel(@CurrentSecurityContext SecurityContext context,
+            @PathVariable("id") Long id, @RequestBody ChatChannelRequest request) {
         try {
             var user = userDetailsService.getDetailsFromContext(context).getUser();
-            var server = serverRepo.findById(id);
-            if (server.isEmpty()) {
+            var maybeServer = serverRepo.findById(id);
+            if (maybeServer.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            if (server.get().getOwnerId() != user.getId()) {
+            var server = maybeServer.get();
+            if (server.getOwner().getId() != user.getId()) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            var channel = channelRepo.save(new ChatChannel(Uuids.timeBased(), id, request.name()));
+            var channel = channelRepo.save(new Channel(null, request.name(), new Date(), server));
             kafkaAdmin.createOrModifyTopics(
                     TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + channel.getId().toString()).build());
 
-            return new ResponseEntity<>(channel, HttpStatus.OK);
+            return new ResponseEntity<>(new ChannelView(channel), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/channels/{id}")
-    public ResponseEntity<ChatChannel> getChannel(@PathVariable("id") UUID id) {
+    public ResponseEntity<ChannelView> getChannel(@PathVariable("id") Long id) {
         try {
             var channel = channelRepo.findById(id);
             if (channel.isEmpty())
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            return new ResponseEntity<>(channel.get(), HttpStatus.OK);
+            return new ResponseEntity<>(new ChannelView(channel.get()), HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error at GET /channels/{id} with id " + id, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -212,36 +230,36 @@ public class ChatServerController {
     }
 
     @PostMapping("/servers/{id}/join")
-    public ResponseEntity<ChatServer> postMethodName(@CurrentSecurityContext SecurityContext context,
-            @PathVariable("id") UUID id) {
+    public ResponseEntity<HttpStatusCode> postMethodName(@CurrentSecurityContext SecurityContext context,
+            @PathVariable("id") Long id) {
         try {
-            var server = serverRepo.findById(id);
-            if (server.isEmpty())
+            var maybeServer = serverRepo.findById(id);
+            if (maybeServer.isEmpty())
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            var server = maybeServer.get();
+            var user = userDetailsService.getDetailsFromContext(context).getUser();
+            server.getMembers().add(user);
 
-            var userId = userDetailsService.getDetailsFromContext(context).getUser().getId();
-            server.get().getMemberIds().add(userId);
-
-            var savedServer = serverRepo.save(server.get());
-            return new ResponseEntity<>(savedServer, HttpStatus.OK);
+            serverRepo.save(server);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error joining server", e);
+            logger.error("Error joining server with id=" + id, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/channels/{id}/messages")
-    public ResponseEntity<List<ChatMessage>> getChannelMessages(@CurrentSecurityContext SecurityContext context,
-            @PathVariable UUID id) {
+    public ResponseEntity<List<Message>> getChannelMessages(@CurrentSecurityContext SecurityContext context,
+            @PathVariable Long id) {
         try {
-            var channel = channelRepo.findById(id);
-            if (channel.isEmpty()) {
+            var maybeChannel = channelRepo.findById(id);
+            if (maybeChannel.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            var userId = userDetailsService.getDetailsFromContext(context).getUser().getId();
-            var server = serverRepo.findById(channel.get().getServerId()).get();
-            if (!server.getMemberIds().contains(userId)) {
+            var user = userDetailsService.getDetailsFromContext(context).getUser();
+            var channel = maybeChannel.get();
+            if (!channel.getServer().getMembers().contains(user)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 

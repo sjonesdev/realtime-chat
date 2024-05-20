@@ -14,6 +14,8 @@ import Stack from "@suid/material/Stack";
 import Button from "@suid/material/Button";
 import Box from "@suid/material/Box";
 import Typography from "@suid/material/Typography";
+import IconButton from "@suid/material/IconButton";
+import { Search } from "@suid/icons-material";
 
 import { AuthContext } from "../components/auth-context";
 import ServerBrowser from "../components/ServerBrowser";
@@ -51,7 +53,10 @@ export default function Servers() {
     };
 
     onMount(async () => {
-        if (!userState.user) navigate("/login");
+        if (!userState.user) {
+            navigate("/login");
+            return;
+        }
         console.log(`fetching servers: ${userState?.user?.serverIds}`);
         const servers = await fetchServers({
             ids: userState?.user?.serverIds,
@@ -114,7 +119,18 @@ export default function Servers() {
                 justifyContent="space-between"
                 overflow="hidden"
             >
-                <Typography textAlign="center">Servers</Typography>
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="center"
+                >
+                    <Typography textAlign="center">Servers</Typography>
+                    <Show when={params.serverId}>
+                        <IconButton component="a" href="/servers">
+                            <Search />
+                        </IconButton>
+                    </Show>
+                </Stack>
                 <Stack overflow="scroll">
                     <For each={joinedServers()}>
                         {(server) => (
@@ -147,6 +163,7 @@ export default function Servers() {
                     }
                     fallback={
                         <ServerBrowser
+                            joinedServers={joinedServers()}
                             addJoinedServer={addJoinedServer}
                             setDetails={setDetailsElementProxy}
                             setHeader={setHeaderElementProxy}

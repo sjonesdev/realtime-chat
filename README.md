@@ -14,6 +14,11 @@ Realtime chat app backend (frontend WIP)
 -   `docker run -p 9092:9092 apache/kafka:3.7.0`
 -   Can download kafka 3.7.0 [here](https://kafka.apache.org/downloads) if you want to be able to run the scripts and stuff or run it not through docker
 
+## Postgres Setup
+
+-   `docker run -p 5432:5432 --name chat-postgres -e POSTGRES_PASSWORD=password -d postgres`
+-   Note you can attach a shell or bash process to the postgres docker container and run `psql postgres postgres`, which will log you into the database with a console.
+
 ## Cassandra Setup
 
 -   `docker network create cassandra`

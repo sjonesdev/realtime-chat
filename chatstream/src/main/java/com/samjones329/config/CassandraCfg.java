@@ -7,13 +7,13 @@ import org.springframework.data.cassandra.config.AbstractCassandraConfiguration;
 import org.springframework.data.cassandra.config.SchemaAction;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
-import com.samjones329.repository.ChatChannelRepository;
-import com.samjones329.repository.ChatServerRepository;
+import com.samjones329.repository.ChannelRepo;
+import com.samjones329.repository.ServerRepo;
 
 @Configuration
 @PropertySource(value = { "classpath:application.properties" })
-@EnableCassandraRepositories(basePackageClasses = { ChatServerRepository.class, ChatChannelRepository.class })
-public class CassandraConfig extends AbstractCassandraConfiguration {
+@EnableCassandraRepositories(basePackageClasses = { ServerRepo.class, ChannelRepo.class })
+public class CassandraCfg extends AbstractCassandraConfiguration {
 
     @Value("${spring.cassandra.keyspace-name}")
     private String keySpace;
