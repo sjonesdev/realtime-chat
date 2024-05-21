@@ -146,7 +146,7 @@ export default function Servers() {
                         </IconButton>
                     </Show>
                 </Stack>
-                <Stack overflow="scroll">
+                <Stack overflow="scroll" flexGrow={1}>
                     <For each={userState.user?.joined_servers}>
                         {(server) => (
                             <Button
