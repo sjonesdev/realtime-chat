@@ -25,7 +25,10 @@ public class ServerView {
         desc = server.getDesc();
         createdAt = server.getCreatedAt();
         ownerId = server.getOwner().getId();
-        defaultChannelId = server.getDefaultChannel().getId();
+        var defaultChannel = server.getDefaultChannel();
+        if (defaultChannel != null) {
+            defaultChannelId = defaultChannel.getId();
+        }
 
         var channelSet = server.getChannels();
         channels = new ArrayList<>(channelSet.size());

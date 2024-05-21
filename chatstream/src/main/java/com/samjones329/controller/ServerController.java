@@ -1,6 +1,7 @@
 package com.samjones329.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -125,14 +126,7 @@ public class ServerController {
                             .build());
 
             server.setDefaultChannel(defaultChannel);
-            // try {
-            // server.getChannels().add(defaultChannel);
-            // } catch (Exception e) {
-            // logger.info("Failed to add channel to server UnsupportedOperationException?"
-            // + (e instanceof UnsupportedOperationException));
-            // server.setChannels(new HashSet<>());
-            // server.getChannels().add(defaultChannel);
-            // }
+            server.setChannels(new HashSet<>(Arrays.asList(defaultChannel)));
             server = serverRepo.save(server);
 
             logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",

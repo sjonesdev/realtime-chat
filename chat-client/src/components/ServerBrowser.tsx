@@ -62,7 +62,7 @@ const ServerBrowser = ({
                                 <ListItemText
                                     primary={server.name}
                                     secondary={`Created ${new Date(
-                                        server.createdAt
+                                        server.created_at
                                     ).toLocaleDateString()}`}
                                 />
                                 <Button

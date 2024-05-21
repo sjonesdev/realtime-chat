@@ -26,6 +26,7 @@ import com.samjones329.model.Message;
 import com.samjones329.repository.ChannelRepo;
 import com.samjones329.repository.MessageRepo;
 import com.samjones329.repository.ServerRepo;
+import com.samjones329.service.ChannelService;
 import com.samjones329.service.UserDetailsServiceImpl;
 
 @Controller
@@ -48,6 +49,9 @@ public class MessageController {
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    ChannelService channelServ;
 
     Logger logger = LoggerFactory.getLogger(MessageController.class);
 
@@ -80,9 +84,8 @@ public class MessageController {
             logger.info("Session principal name: " + principal.getName());
 
             // check permissions
-            var channel = channelRepo.findById(channelId).get(); // will throw error if channel not exist
             var user = userDetailsService.loadUserByUsername(principal.getName()).getUser();
-            if (!channel.getServer().getMembers().contains(user))
+            if (!channelServ.canUserSendMessageInChannel(user, channelId))
                 throw new RuntimeException("User cannot message in unjoined server");
             // Sending the message to kafka topic queue
             Message savedMessage = messageRepo

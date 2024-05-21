@@ -1,4 +1,4 @@
-import { For, createSignal, onMount, useContext } from "solid-js";
+import { For, createEffect, createSignal, onMount, useContext } from "solid-js";
 import { Client } from "@stomp/stompjs";
 
 import IconButton from "@suid/material/IconButton";
@@ -14,30 +14,36 @@ import { Channel, Message, fetchMessages } from "../lib/chat-api-client";
 import type { User } from "../lib/user-client";
 import { AuthContext } from "./auth-context";
 
-export default function MessagePanel({
-    channel,
-    setConnected,
-    users,
-}: {
+export default function MessagePanel(props: {
     channel: Channel;
     setConnected: (connected: boolean) => void;
     users: User[];
 }) {
+    console.log("Message panel");
     const [messages, setMessages] = createSignal<Message[]>([], {
         equals: false,
     });
     const [messageDraft, setMessageDraft] = createSignal("");
     const [userState] = useContext(AuthContext);
 
-    const usersMap = new Map<string, User>();
-    for (const user of users) {
-        usersMap.set(user.id, user);
+    const um = new Map<number, User>();
+    for (const user of props.users) {
+        um.set(user.id, user);
     }
+    const [usersMap, setUsersMap] = createSignal<Map<number, User>>(um);
+
+    createEffect(() => {
+        const um = new Map<number, User>();
+        for (const user of props.users) {
+            um.set(user.id, user);
+        }
+        setUsersMap(um);
+    });
 
     onMount(async () => {
-        const messages = await fetchMessages(channel.id);
-        console.log("Got messages", messages);
+        const messages = await fetchMessages(props.channel.id);
         setMessages(messages);
+        stompClient.deactivate();
         stompClient.activate();
     });
 
@@ -56,10 +62,10 @@ export default function MessagePanel({
     };
 
     stompClient.onConnect = (frame) => {
-        setConnected(true);
+        props.setConnected(true);
         console.log("Connected: " + frame);
         stompClient.subscribe(
-            `topic/chat/${channel.id}`,
+            `topic/chat/${props.channel.id}`,
             async (chatMessage) => {
                 console.log(chatMessage);
                 const msg = parseMsg(chatMessage.body);
@@ -80,12 +86,12 @@ export default function MessagePanel({
     };
 
     stompClient.onWebSocketError = (error) => {
-        setConnected(false);
+        props.setConnected(false);
         console.error(`Error with websocket`, error);
     };
 
     stompClient.onDisconnect = () => {
-        setConnected(false);
+        props.setConnected(false);
         console.error(`Websocket disconnected`);
     };
 
@@ -109,10 +115,13 @@ export default function MessagePanel({
                             <ListItemText
                                 primary={
                                     <>
-                                        {usersMap.get(item.senderId)?.username}{" "}
+                                        {
+                                            usersMap().get(item.sender_id)
+                                                ?.username
+                                        }{" "}
                                         <Typography variant="caption">
                                             {new Date(
-                                                item.createdAt
+                                                item.created_at
                                             ).toLocaleString()}
                                         </Typography>
                                     </>
@@ -130,11 +139,11 @@ export default function MessagePanel({
                     e.preventDefault();
                     console.log(
                         `Publishing message "${messageDraft()}" to app/chat/${
-                            channel.id
+                            props.channel.id
                         } with senderId{${userState.user?.id}}`
                     );
                     stompClient.publish({
-                        destination: `app/chat/${channel.id}`,
+                        destination: `app/chat/${props.channel.id}`,
                         body: JSON.stringify({
                             senderId: userState.user?.id,
                             message: messageDraft(),

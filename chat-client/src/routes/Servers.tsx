@@ -22,26 +22,23 @@ import ServerBrowser from "../components/ServerBrowser";
 import CreateServer from "../components/CreateServer";
 import ServerControlPanel from "../components/ServerControlPanel";
 
-import { type Server, fetchServers } from "../lib/chat-api-client";
+import { type Server, fetchServers, Channel } from "../lib/chat-api-client";
 import { APPBAR_HEIGHT, BODY_MARGIN } from "../lib/style-constants";
 import DefaultDetails from "../components/DefaultDetails";
 import DefaultHeader from "../components/DefaultHeader";
 
 export default function Servers() {
-    const [joinedServers, setJoinedServers] = createSignal<Server[]>([], {
-        equals: false,
-    });
     const [userState, { setUser }] = useContext(AuthContext);
     const navigate = useNavigate();
     const params = useParams<{ serverId?: string; channelId?: string }>();
-    const [server, setServer] = createSignal<number>(-1);
+    const [server, setServer] = createSignal<Server>();
+    const [channel, setChannel] = createSignal<Channel>();
     const theme = useTheme();
 
     const [detailsElement, setDetailsElement] = createSignal(
         <DefaultDetails />
     );
     const setDetailsElementProxy = (elem?: JSX.Element) => {
-        console.log("Setting details");
         if (elem) setDetailsElement(elem);
         else setDetailsElement(<DefaultDetails />);
     };
@@ -57,39 +54,57 @@ export default function Servers() {
             navigate("/login");
             return;
         }
-        console.log(`fetching servers: ${userState?.user?.serverIds}`);
-        const servers = await fetchServers({
-            ids: userState?.user?.serverIds,
-        });
-        console.log("Got servers", servers);
-        setJoinedServers(servers);
     });
 
     // will trigger when params or joinedServers change
     createEffect(async () => {
-        const servers = joinedServers();
-        if (!servers || !servers.length || !params.serverId) return;
-        for (let i = 0; i < servers.length; i++) {
-            if (params.serverId !== servers[i].id) continue;
-            console.log("Found selected server");
-            if (!params.channelId)
+        if (!userState.user || !params.serverId) return;
+
+        let serverIdx = -1;
+        for (let i = 0; i < userState.user.joined_servers.length; i++) {
+            if (`${userState.user.joined_servers[i].id}` !== params.serverId)
+                continue;
+
+            serverIdx = i;
+            console.log("setting server");
+            setServer(userState.user.joined_servers[i]);
+            if (!params.channelId) {
                 navigate(
-                    `/servers/${params.serverId}/${servers[i].defaultChannelId}`
+                    `/servers/${params.serverId}/${userState.user.joined_servers[i].default_channel_id}`
                 );
-            setServer(i);
+                console.log("going to default channel");
+                setChannel(
+                    userState.user.joined_servers.find(
+                        (val) =>
+                            val.id ===
+                            userState.user?.joined_servers[i].default_channel_id
+                    )
+                );
+                return;
+            }
+        }
+
+        if (serverIdx < 0) return;
+        for (
+            let i = 0;
+            i < userState.user.joined_servers[serverIdx].channels.length;
+            i++
+        ) {
+            if (
+                `${userState.user.joined_servers[serverIdx].channels[i].id}` ===
+                params.channelId
+            ) {
+                console.log("setting channel");
+                setChannel(
+                    userState.user.joined_servers[serverIdx].channels[i]
+                );
+            }
         }
     });
 
     const addJoinedServer = (server: Server) => {
-        console.log("Server joined", server);
-        if (userState.user!.serverIds)
-            userState.user!.serverIds.push(server.id);
-        else userState.user!.serverIds = [server.id];
+        userState.user!.joined_servers.push(server);
         setUser(userState.user!);
-        setJoinedServers((prev) => {
-            prev?.push(server);
-            return prev;
-        });
     };
 
     return (
@@ -132,12 +147,12 @@ export default function Servers() {
                     </Show>
                 </Stack>
                 <Stack overflow="scroll">
-                    <For each={joinedServers()}>
+                    <For each={userState.user?.joined_servers}>
                         {(server) => (
                             <Button
                                 onClick={() => {
                                     navigate(
-                                        `/servers/${server.id}/${server.defaultChannelId}`
+                                        `/servers/${server.id}/${server.default_channel_id}`
                                     );
                                 }}
                             >{`${server.name}`}</Button>
@@ -157,13 +172,12 @@ export default function Servers() {
                     when={
                         params.serverId &&
                         params.channelId &&
-                        server() >= 0 &&
-                        joinedServers() &&
-                        joinedServers().length
+                        server() &&
+                        channel()
                     }
                     fallback={
                         <ServerBrowser
-                            joinedServers={joinedServers()}
+                            joinedServers={userState.user?.joined_servers ?? []}
                             addJoinedServer={addJoinedServer}
                             setDetails={setDetailsElementProxy}
                             setHeader={setHeaderElementProxy}
@@ -171,8 +185,8 @@ export default function Servers() {
                     }
                 >
                     <ServerControlPanel
-                        server={joinedServers()[server()]}
-                        initChannel={params.channelId}
+                        server={server()!}
+                        channel={channel()!}
                         setDetails={setDetailsElementProxy}
                         setHeader={setHeaderElementProxy}
                     />

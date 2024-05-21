@@ -1,31 +1,33 @@
+import { User } from "./user-client";
+
 const BASE_URL = "http://localhost:8080/api";
 
 export interface Message {
-    id: string;
-    channelId: string;
-    senderId: string;
+    id: number;
+    channel_id: number;
+    sender_id: number;
     message: string;
-    createdAt: string;
+    created_at: string;
 }
 
 export interface Server {
-    id: string;
+    id: number;
     name: string;
-    ownerId: string;
-    defaultChannelId: string;
-    channelIds: string[];
-    memberIds: string[];
-    createdAt: string;
+    desc: string;
+    created_at: string;
+    owner_id: number;
+    default_channel_id: number;
+    channels: Channel[];
+    members: User[];
 }
 
 export interface Channel {
-    id: string;
+    id: number;
     name: string;
-    createdAt: string;
-    serverId: string;
+    created_at: string;
 }
 
-export async function fetchMessages(channelId: string): Promise<Message[]> {
+export async function fetchMessages(channelId: number): Promise<Message[]> {
     return (
         await fetch(`${BASE_URL}/channels/${channelId}/messages`, {
             headers: { "Content-Type": "application/json" },
@@ -72,16 +74,8 @@ export async function postServer(
     return res.json();
 }
 
-export async function fetchChannels(serverId: string): Promise<Channel[]> {
-    return (
-        await fetch(`${BASE_URL}/servers/${serverId}/channels`, {
-            credentials: "include",
-        })
-    ).json();
-}
-
 /** Returns true if successfully joined, false otherwise */
-export async function joinServer(serverId: string): Promise<boolean> {
+export async function joinServer(serverId: number): Promise<boolean> {
     const res = await fetch(`${BASE_URL}/servers/${serverId}/join`, {
         method: "post",
         credentials: "include",

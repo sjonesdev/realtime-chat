@@ -1,4 +1,11 @@
-import { For, type JSX, Show, createSignal, onMount } from "solid-js";
+import {
+    For,
+    type JSX,
+    Show,
+    createSignal,
+    onMount,
+    createEffect,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
 import Button from "@suid/material/Button";
@@ -8,55 +15,35 @@ import { CircularProgress, useTheme } from "@suid/material";
 import { CloudOff, Stream, TextFields } from "@suid/icons-material";
 
 import MessagePanel from "./MessagePanel";
-import {
-    type Channel,
-    fetchChannels,
-    type Server,
-} from "../lib/chat-api-client";
-import { fetchUsers, type User } from "../lib/user-client";
+import { type Channel, type Server } from "../lib/chat-api-client";
 import Tabs from "./Tabs";
 
-const ServerControlPanel = ({
-    server,
-    initChannel,
-    setDetails,
-    setHeader,
-}: {
-    server?: Server;
-    initChannel?: string;
+const ServerControlPanel = (props: {
+    server: Server;
+    channel: Channel;
     setDetails: (elem?: JSX.Element) => void;
     setHeader: (elem?: JSX.Element) => void;
 }) => {
-    console.log("Hello from ServerControlPanel");
     const theme = useTheme();
-    const [channel, setChannel] = createSignal(-1);
-    const [channels, setChannels] = createSignal<Channel[]>([]);
-    const [users, setUsers] = createSignal<User[]>([]);
     const [connected, setConnected] = createSignal(false);
     const navigate = useNavigate();
 
+    createEffect(() => {
+        console.log(
+            "channel",
+            props.channel,
+            "server",
+            props.server,
+            "channel",
+            props.channel
+        );
+    });
+
     onMount(async () => {
-        if (!server) {
-            console.warn("No server in control panel");
-            return;
-        }
-        setDetails(<CircularProgress />);
-        console.log("Fetching channels and users for server");
-        const newUsers = await fetchUsers(server.memberIds);
-        setUsers(newUsers);
+        if (!props.server) return;
+        props.setDetails(<CircularProgress />);
 
-        const newChannels = await fetchChannels(server.id);
-        setChannels(newChannels);
-
-        let selectedChannel = -1;
-        for (let i = 0; i < newChannels.length; i++) {
-            if (newChannels[i].id === initChannel ?? server.defaultChannelId) {
-                selectedChannel = i;
-            }
-        }
-
-        setChannel(selectedChannel);
-        setHeader(
+        props.setHeader(
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -65,7 +52,7 @@ const ServerControlPanel = ({
                 <Stack direction="row" alignItems="center">
                     <TextFields fontSize="small" />
                     <Typography variant="body2" component="h2">
-                        {channels()[channel()].name}
+                        {props.channel.name}
                     </Typography>
                 </Stack>
 
@@ -82,14 +69,16 @@ const ServerControlPanel = ({
             </Stack>
         );
 
-        if (!server) return;
+        if (!props.server) return;
 
         const channelsPanel = (
-            <For each={channels()}>
+            <For each={props.server?.channels}>
                 {(channel) => (
                     <Button
                         onClick={() => {
-                            navigate(`/servers/${server.id}/${channel.id}`);
+                            navigate(
+                                `/servers/${props.server?.id}/${channel.id}`
+                            );
                         }}
                     >
                         <TextFields />
@@ -99,11 +88,11 @@ const ServerControlPanel = ({
             </For>
         );
         const usersPanel = (
-            <For each={users()}>
+            <For each={props.server?.members}>
                 {(user) => <Button>{user.username}</Button>}
             </For>
         );
-        setDetails(
+        props.setDetails(
             <Tabs
                 tabs={[
                     { label: "Channels", panel: channelsPanel },
@@ -114,20 +103,11 @@ const ServerControlPanel = ({
     });
 
     return (
-        <Show
-            when={server}
-            fallback={<div>You have not joined this server</div>}
-        >
-            {(server) => (
-                <Show when={channel() >= 0}>
-                    <MessagePanel
-                        users={users()}
-                        setConnected={setConnected}
-                        channel={channels()[channel()]}
-                    />
-                </Show>
-            )}
-        </Show>
+        <MessagePanel
+            users={props.server.members}
+            setConnected={setConnected}
+            channel={props.channel}
+        />
     );
 };
 

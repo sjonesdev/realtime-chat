@@ -1,15 +1,16 @@
 import { Server } from "./chat-api-client";
 
 export interface User {
-    id: string;
+    id: number;
     username: string;
+    created_at: string;
 }
 
 export type SelfUser =
     | (User & {
           email: string;
           joined_servers: Server[];
-          owned_servers: Server[];
+          owned_server_ids: number[];
       })
     | null
     | undefined;
