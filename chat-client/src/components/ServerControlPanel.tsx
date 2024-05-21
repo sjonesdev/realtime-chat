@@ -1,11 +1,4 @@
-import {
-    For,
-    type JSX,
-    Show,
-    createSignal,
-    onMount,
-    createEffect,
-} from "solid-js";
+import { For, type JSX, createSignal, onMount, useContext } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
 import Button from "@suid/material/Button";
@@ -17,6 +10,8 @@ import { CloudOff, Stream, TextFields } from "@suid/icons-material";
 import MessagePanel from "./MessagePanel";
 import { type Channel, type Server } from "../lib/chat-api-client";
 import Tabs from "./Tabs";
+import CreateChannel from "./CreateChannel";
+import { AuthContext } from "./auth-context";
 
 const ServerControlPanel = (props: {
     server: Server;
@@ -27,17 +22,7 @@ const ServerControlPanel = (props: {
     const theme = useTheme();
     const [connected, setConnected] = createSignal(false);
     const navigate = useNavigate();
-
-    createEffect(() => {
-        console.log(
-            "channel",
-            props.channel,
-            "server",
-            props.server,
-            "channel",
-            props.channel
-        );
-    });
+    const [userState, { addChannelToServer }] = useContext(AuthContext);
 
     onMount(async () => {
         if (!props.server) return;
@@ -72,20 +57,23 @@ const ServerControlPanel = (props: {
         if (!props.server) return;
 
         const channelsPanel = (
-            <For each={props.server?.channels}>
-                {(channel) => (
-                    <Button
-                        onClick={() => {
-                            navigate(
-                                `/servers/${props.server?.id}/${channel.id}`
-                            );
-                        }}
-                    >
-                        <TextFields />
-                        {channel.name}
-                    </Button>
-                )}
-            </For>
+            <>
+                <For each={props.server?.channels}>
+                    {(channel) => (
+                        <Button
+                            onClick={() => {
+                                navigate(
+                                    `/servers/${props.server?.id}/${channel.id}`
+                                );
+                            }}
+                        >
+                            <TextFields />
+                            {channel.name}
+                        </Button>
+                    )}
+                </For>
+                <CreateChannel serverId={props.server.id} />
+            </>
         );
         const usersPanel = (
             <For each={props.server?.members}>

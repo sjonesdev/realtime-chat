@@ -1,9 +1,6 @@
 package com.samjones329.controller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -12,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,12 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.samjones329.constants.KafkaConstants;
-import com.samjones329.model.Channel;
 import com.samjones329.model.Message;
 import com.samjones329.model.Server;
 import com.samjones329.repository.ServerRepo;
 import com.samjones329.repository.UserRepo;
+import com.samjones329.service.ServerService;
 import com.samjones329.service.UserDetailsServiceImpl;
 import com.samjones329.view.ChannelView;
 import com.samjones329.view.ServerView;
@@ -58,7 +52,7 @@ public class ServerController {
     UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private KafkaAdmin kafkaAdmin;
+    ServerService serverServ;
 
     Logger logger = LoggerFactory.getLogger(ServerController.class);
 
@@ -109,28 +103,10 @@ public class ServerController {
         try {
             var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
 
-            var server = new Server(null, req.name(), req.description(), new Date(), null,
-                    user, new HashSet<>(), new HashSet<>());
-            server.getMembers().add(user);
-            server = serverRepo.save(server);
+            var server = serverServ.createServer(user, req.name(), req.description());
 
-            user.getJoinedServers().add(server);
-            userRepo.save(user);
-
-            // add try catch to this later since it's not critical
-            Channel defaultChannel = new Channel(null, "Default", new Date(), server);
-            defaultChannel = channelRepo.save(defaultChannel);
-
-            kafkaAdmin.createOrModifyTopics(
-                    TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + defaultChannel.getId().toString())
-                            .build());
-
-            server.setDefaultChannel(defaultChannel);
-            server.setChannels(new HashSet<>(Arrays.asList(defaultChannel)));
-            server = serverRepo.save(server);
-
-            logger.info(String.format("Making ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
-                    server.getId(), server.getName(), server.getName()/* getOwner().getId() */, server.getChannels(),
+            logger.info(String.format("Made ChatServer[id=%s,name=%s,ownerId=%s,chatChannelIds=%s,memberIds=%s]",
+                    server.getId(), server.getName(), server.getOwner().getId(), server.getChannels(),
                     server.getMembers()));
 
             return new ResponseEntity<>(new ServerView(server), HttpStatus.CREATED);
@@ -188,23 +164,16 @@ public class ServerController {
 
     @PostMapping("/servers/{id}/channels")
     public ResponseEntity<ChannelView> createChannel(@CurrentSecurityContext SecurityContext context,
-            @PathVariable("id") Long id, @RequestBody ChatChannelRequest request) {
+            @PathVariable("id") Long id, @RequestBody ChatChannelRequest req) {
         try {
             var user = userDetailsService.getDetailsFromContext(context).getUser();
-            var maybeServer = serverRepo.findById(id);
-            if (maybeServer.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            var server = maybeServer.get();
-            if (server.getOwner().getId() != user.getId()) {
+
+            var channel = serverServ.createChannel(user, id, req.name());
+            if (channel.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            var channel = channelRepo.save(new Channel(null, request.name(), new Date(), server));
-            kafkaAdmin.createOrModifyTopics(
-                    TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + channel.getId().toString()).build());
-
-            return new ResponseEntity<>(new ChannelView(channel), HttpStatus.OK);
+            return new ResponseEntity<>(new ChannelView(channel.get()), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

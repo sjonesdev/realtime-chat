@@ -28,7 +28,7 @@ import DefaultDetails from "../components/DefaultDetails";
 import DefaultHeader from "../components/DefaultHeader";
 
 export default function Servers() {
-    const [userState, { setUser }] = useContext(AuthContext);
+    const [userStore] = useContext(AuthContext);
     const navigate = useNavigate();
     const params = useParams<{ serverId?: string; channelId?: string }>();
     const [server, setServer] = createSignal<Server>();
@@ -50,7 +50,7 @@ export default function Servers() {
     };
 
     onMount(async () => {
-        if (!userState.user) {
+        if (!userStore.user) {
             navigate("/login");
             return;
         }
@@ -58,26 +58,24 @@ export default function Servers() {
 
     // will trigger when params or joinedServers change
     createEffect(async () => {
-        if (!userState.user || !params.serverId) return;
+        if (!userStore.user || !params.serverId) return;
 
         let serverIdx = -1;
-        for (let i = 0; i < userState.user.joined_servers.length; i++) {
-            if (`${userState.user.joined_servers[i].id}` !== params.serverId)
+        for (let i = 0; i < userStore.user.joined_servers.length; i++) {
+            if (`${userStore.user.joined_servers[i].id}` !== params.serverId)
                 continue;
 
             serverIdx = i;
-            console.log("setting server");
-            setServer(userState.user.joined_servers[i]);
+            setServer(userStore.user.joined_servers[i]);
             if (!params.channelId) {
                 navigate(
-                    `/servers/${params.serverId}/${userState.user.joined_servers[i].default_channel_id}`
+                    `/servers/${params.serverId}/${userStore.user.joined_servers[i].default_channel_id}`
                 );
-                console.log("going to default channel");
                 setChannel(
-                    userState.user.joined_servers.find(
+                    userStore.user.joined_servers.find(
                         (val) =>
                             val.id ===
-                            userState.user?.joined_servers[i].default_channel_id
+                            userStore.user?.joined_servers[i].default_channel_id
                     )
                 );
                 return;
@@ -87,25 +85,19 @@ export default function Servers() {
         if (serverIdx < 0) return;
         for (
             let i = 0;
-            i < userState.user.joined_servers[serverIdx].channels.length;
+            i < userStore.user.joined_servers[serverIdx].channels.length;
             i++
         ) {
             if (
-                `${userState.user.joined_servers[serverIdx].channels[i].id}` ===
+                `${userStore.user.joined_servers[serverIdx].channels[i].id}` ===
                 params.channelId
             ) {
-                console.log("setting channel");
                 setChannel(
-                    userState.user.joined_servers[serverIdx].channels[i]
+                    userStore.user.joined_servers[serverIdx].channels[i]
                 );
             }
         }
     });
-
-    const addJoinedServer = (server: Server) => {
-        userState.user!.joined_servers.push(server);
-        setUser(userState.user!);
-    };
 
     return (
         <Box
@@ -147,7 +139,7 @@ export default function Servers() {
                     </Show>
                 </Stack>
                 <Stack overflow="scroll" flexGrow={1}>
-                    <For each={userState.user?.joined_servers}>
+                    <For each={userStore.user?.joined_servers}>
                         {(server) => (
                             <Button
                                 onClick={() => {
@@ -159,7 +151,7 @@ export default function Servers() {
                         )}
                     </For>
                 </Stack>
-                <CreateServer addJoinedServer={addJoinedServer} />
+                <CreateServer />
             </Box>
 
             <Box
@@ -177,8 +169,6 @@ export default function Servers() {
                     }
                     fallback={
                         <ServerBrowser
-                            joinedServers={userState.user?.joined_servers ?? []}
-                            addJoinedServer={addJoinedServer}
                             setDetails={setDetailsElementProxy}
                             setHeader={setHeaderElementProxy}
                         />

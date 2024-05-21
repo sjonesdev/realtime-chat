@@ -84,3 +84,14 @@ export async function joinServer(serverId: number): Promise<boolean> {
     if (res.ok) return true;
     return false;
 }
+
+export async function postChannel(serverId: number, name: string) {
+    const res = await fetch(`${BASE_URL}/servers/${serverId}/channels`, {
+        method: "post",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+}

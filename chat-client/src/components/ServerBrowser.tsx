@@ -1,4 +1,11 @@
-import { For, Show, createSignal, onMount, type JSX } from "solid-js";
+import {
+    For,
+    Show,
+    createSignal,
+    onMount,
+    useContext,
+    type JSX,
+} from "solid-js";
 
 import IconButton from "@suid/material/IconButton";
 import List from "@suid/material/List";
@@ -12,24 +19,20 @@ import Divider from "@suid/material/Divider";
 
 import { fetchServers, joinServer, type Server } from "../lib/chat-api-client";
 import Typography from "@suid/material/Typography";
+import { AuthContext } from "./auth-context";
 
-const ServerBrowser = ({
-    joinedServers,
-    addJoinedServer,
-    setDetails,
-    setHeader,
-}: {
-    joinedServers: Server[];
-    addJoinedServer: (server: Server) => void;
+const ServerBrowser = (props: {
     setDetails: (elem: JSX.Element) => void;
     setHeader?: (elem: JSX.Element) => void;
 }) => {
     const [query, setQuery] = createSignal("");
     const [servers, setServers] = createSignal<Server[]>([]);
+    const [userStore, { addJoinedServer }] = useContext(AuthContext);
 
     onMount(async () => {
-        setServers(await fetchServers({}));
-        setDetails(<Typography>Select a server for more details</Typography>);
+        props.setDetails(
+            <Typography>Select a server for more details</Typography>
+        );
     });
 
     return (
@@ -46,7 +49,10 @@ const ServerBrowser = ({
                 }}
                 direction="row"
             >
-                <TextField fullWidth />
+                <TextField
+                    onChange={(e) => setQuery(e.currentTarget.value)}
+                    fullWidth
+                />
                 <IconButton type="submit">
                     <SearchIcon />
                 </IconButton>
@@ -75,14 +81,14 @@ const ServerBrowser = ({
                                     }}
                                     variant="contained"
                                     disabled={
-                                        joinedServers.findIndex(
+                                        (userStore.user?.joined_servers.findIndex(
                                             (val) => val.id === server.id
-                                        ) >= 0
+                                        ) ?? -1) >= 0
                                     }
                                 >
-                                    {joinedServers.findIndex(
+                                    {(userStore.user?.joined_servers.findIndex(
                                         (val) => val.id === server.id
-                                    ) >= 0
+                                    ) ?? -1) >= 0
                                         ? "Joined"
                                         : "Join"}
                                 </Button>

@@ -19,7 +19,6 @@ export default function MessagePanel(props: {
     setConnected: (connected: boolean) => void;
     users: User[];
 }) {
-    console.log("Message panel");
     const [messages, setMessages] = createSignal<Message[]>([], {
         equals: false,
     });
@@ -63,11 +62,9 @@ export default function MessagePanel(props: {
 
     stompClient.onConnect = (frame) => {
         props.setConnected(true);
-        console.log("Connected: " + frame);
         stompClient.subscribe(
             `topic/chat/${props.channel.id}`,
             async (chatMessage) => {
-                console.log(chatMessage);
                 const msg = parseMsg(chatMessage.body);
                 setMessages((prev) => {
                     prev.push(msg);
@@ -101,10 +98,11 @@ export default function MessagePanel(props: {
     };
 
     stompClient.onUnhandledFrame = (frame) =>
-        console.log("unhandled frame", frame);
-    stompClient.onUnhandledMessage = (msg) => console.log("unhandled msg", msg);
+        console.warn("unhandled frame", frame);
+    stompClient.onUnhandledMessage = (msg) =>
+        console.warn("unhandled msg", msg);
     stompClient.onUnhandledReceipt = (receipt) =>
-        console.log("unhandled receipt", receipt);
+        console.warn("unhandled receipt", receipt);
 
     return (
         <Stack height="100%" justifyContent="flex-end">
@@ -137,7 +135,7 @@ export default function MessagePanel(props: {
                 direction="row"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    console.log(
+                    console.debug(
                         `Publishing message "${messageDraft()}" to app/chat/${
                             props.channel.id
                         } with senderId{${userState.user?.id}}`

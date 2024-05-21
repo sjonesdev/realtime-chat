@@ -7,21 +7,20 @@ import Modal from "@suid/material/Modal";
 import TextField from "@suid/material/TextField";
 import Typography from "@suid/material/Typography";
 
-import { postServer } from "../lib/chat-api-client";
+import { Channel, postChannel } from "../lib/chat-api-client";
 import { AuthContext } from "./auth-context";
 
-export default () => {
-    const [newServerName, setNewServerName] = createSignal("");
-    const [newServerDesc, setNewServerDesc] = createSignal("");
+export default (props: { serverId: number }) => {
+    const [newChannelName, setNewChannelName] = createSignal("");
     const [open, setOpen] = createSignal(false);
     const theme = useTheme();
     const [error, setError] = createSignal("");
-    const [_, { addOwnedServer }] = useContext(AuthContext);
+    const [_, { addChannelToServer }] = useContext(AuthContext);
 
     return (
         <>
             <Button variant="outlined" onClick={() => setOpen(true)}>
-                New Server
+                New Channel
             </Button>
             <Modal
                 open={open()}
@@ -32,15 +31,15 @@ export default () => {
                     component="form"
                     onSubmit={(e) => {
                         e.preventDefault();
-                        if (newServerName) {
-                            postServer(newServerName(), newServerDesc())
+                        if (newChannelName) {
+                            postChannel(props.serverId, newChannelName())
                                 .then((val) => {
                                     if (val) {
                                         console.debug(
-                                            "New server created: ",
+                                            "New channel created: ",
                                             val
                                         );
-                                        addOwnedServer(val);
+                                        addChannelToServer(props.serverId, val);
                                         setOpen(false);
                                     }
                                     setError("Error making new server");
@@ -68,27 +67,21 @@ export default () => {
                     gap={1}
                 >
                     <Typography variant="h6" component="h2">
-                        Create a Server
+                        Create a Channel
                     </Typography>
                     <TextField
                         onChange={(e) =>
-                            setNewServerName(e.currentTarget.value)
+                            setNewChannelName(e.currentTarget.value)
                         }
                         label="Name"
-                    ></TextField>
-                    <TextField
-                        onChange={(e) =>
-                            setNewServerDesc(e.currentTarget.value)
-                        }
-                        label="Description"
                     ></TextField>
                     <Button
                         variant="contained"
                         color="success"
                         type="submit"
-                        disabled={!newServerName()}
+                        disabled={!newChannelName()}
                     >
-                        Create Server
+                        Create Channel
                     </Button>
                     <Show when={error()}>
                         <Typography color="error">{error()}</Typography>
