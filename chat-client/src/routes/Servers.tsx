@@ -20,15 +20,13 @@ export default function Servers() {
     const [server, setServer] = createSignal<number>(-1);
     const [channel, setChannel] = createSignal<number>(-1);
 
-    onMount(async () => {
+    // will trigger when params or joinedServers change
+    createEffect(async () => {
         if (!userStore.user) {
             navigate("/login");
             return;
         }
-    });
 
-    // will trigger when params or joinedServers change
-    createEffect(async () => {
         console.log("params", params.serverId, params.channelId);
         if (!userStore.user || !params.serverId) {
             setServer(-1);

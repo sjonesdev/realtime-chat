@@ -1,35 +1,31 @@
-import { createEffect, createSignal, useContext } from "solid-js";
+import { createSignal, useContext } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 import { AuthContext } from "./components/auth-context";
 import { Show } from "solid-js";
 import {
     AppBar,
-    Box,
     Button,
     Divider,
     IconButton,
-    Link,
     Menu,
     MenuItem,
     Stack,
     Toolbar,
     Typography,
-    useTheme,
 } from "@suid/material";
 import AccountCircle from "@suid/icons-material/AccountCircle";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { APPBAR_HEIGHT } from "./lib/style-constants";
+import { logout } from "./lib/user-client";
 
 export default (props: { children?: JSX.Element }) => {
     const loc = useLocation();
-    const [userState] = useContext(AuthContext);
+    const [userState, { setUser }] = useContext(AuthContext);
     const [anchorEl, setAnchorEl] = createSignal<null | HTMLElement>(null);
     const open = () => Boolean(anchorEl());
     const handleClose = () => {
         setAnchorEl(null);
     };
-    const navigate = useNavigate();
-    const theme = useTheme();
 
     return (
         <>
@@ -116,6 +112,15 @@ export default (props: { children?: JSX.Element }) => {
                                 }}
                             >
                                 Settings
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    logout().then((successful) => {
+                                        if (successful) setUser(null);
+                                    });
+                                }}
+                            >
+                                Logout
                             </MenuItem>
                         </Menu>
                     </Show>

@@ -100,7 +100,7 @@ public class UserController {
             // replace authentication
             securityContext.setAuthentication(authenticationResponse);
 
-            // new security context for thread
+            // new security context for thread (I don't think this is necessary?)
             SecurityContextHolder.setContext(securityContext);
 
             // persist authentication
@@ -125,6 +125,19 @@ public class UserController {
     }
 
     public record LoginRequest(String email, String password) {
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<HttpStatus> logout(@CurrentSecurityContext SecurityContext securityContext) {
+        try {
+            ServletRequestAttributes reqAttr = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+            securityContext.setAuthentication(null);
+            securityContextRepository.saveContext(securityContext, reqAttr.getRequest(), reqAttr.getResponse());
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error logging out", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/authentication")

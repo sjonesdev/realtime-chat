@@ -60,6 +60,14 @@ export async function login(
     return res.json();
 }
 
+export async function logout(): Promise<boolean> {
+    const res = await fetch(`${BASE_URL}/logout`, {
+        method: "POST",
+        credentials: "include",
+    });
+    return res.ok;
+}
+
 export async function fetchAuth(): Promise<SelfUser | null> {
     const res = await fetch(`${BASE_URL}/authentication`, {
         credentials: "include",

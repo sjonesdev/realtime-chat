@@ -7,7 +7,7 @@ import { Channel, Server } from "../lib/chat-api-client";
 type AuthContextType = [
     { user: SelfUser },
     {
-        setUser: (user: NonNullable<SelfUser>) => void;
+        setUser: (user: SelfUser) => void;
         addJoinedServer: (server: Server) => void;
         addOwnedServer: (server: Server) => void;
         addChannelToServer: (serverId: number, channel: Channel) => void;
@@ -29,7 +29,7 @@ export function AuthProvider(props: { user: SelfUser; children: JSX.Element }) {
     const context: AuthContextType = [
         store,
         {
-            setUser: (user: NonNullable<SelfUser>) => setStore("user", user),
+            setUser: (user) => setStore("user", user),
             addJoinedServer: (server: Server) =>
                 setStore(
                     "user",
