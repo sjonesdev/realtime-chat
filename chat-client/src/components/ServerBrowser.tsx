@@ -18,22 +18,12 @@ import ListItemText from "@suid/material/ListItemText";
 import Divider from "@suid/material/Divider";
 
 import { fetchServers, joinServer, type Server } from "../lib/chat-api-client";
-import Typography from "@suid/material/Typography";
 import { AuthContext } from "./auth-context";
 
-const ServerBrowser = (props: {
-    setDetails: (elem: JSX.Element) => void;
-    setHeader?: (elem: JSX.Element) => void;
-}) => {
+const ServerBrowser = () => {
     const [query, setQuery] = createSignal("");
     const [servers, setServers] = createSignal<Server[]>([]);
     const [userStore, { addJoinedServer }] = useContext(AuthContext);
-
-    onMount(async () => {
-        props.setDetails(
-            <Typography>Select a server for more details</Typography>
-        );
-    });
 
     return (
         <Stack gap={1} height="100%">
