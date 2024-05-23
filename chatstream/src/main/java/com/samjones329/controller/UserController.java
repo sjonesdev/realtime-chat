@@ -143,12 +143,8 @@ public class UserController {
     @GetMapping("/authentication")
     public ResponseEntity<UserSelfView> getAuthentication(
             @CurrentSecurityContext SecurityContext context) {
-        var user = userDetailsService.getDetailsFromContext(context).getUser();
+        var user = userDetailsService.getUserFromContext(context);
 
-        var owned = new ArrayList<Long>();
-        for (var server : user.getOwnedServers()) {
-            owned.add(server.getId());
-        }
         return new ResponseEntity<>(
                 new UserSelfView(user),
                 HttpStatus.OK);

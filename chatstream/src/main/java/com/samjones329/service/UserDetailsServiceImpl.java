@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.samjones329.model.User;
 import com.samjones329.model.UserDetailsImpl;
 import com.samjones329.repository.UserRepo;
 
@@ -23,8 +24,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new UserDetailsImpl(user.get());
     }
 
-    public UserDetailsImpl getDetailsFromContext(SecurityContext context) {
-        return (UserDetailsImpl) context.getAuthentication().getPrincipal();
+    public User getUserFromContext(SecurityContext context) {
+        UserDetailsImpl details = (UserDetailsImpl) context.getAuthentication().getPrincipal();
+        User detachedUser = details.getUser();
+        return userRepo.findById(detachedUser.getId()).get();
     }
 
 }

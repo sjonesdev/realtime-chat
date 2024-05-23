@@ -98,10 +98,10 @@ public class ServerController {
     }
 
     @PostMapping("/servers")
-    public ResponseEntity<ServerView> createServer(@CurrentSecurityContext SecurityContext securityContext,
+    public ResponseEntity<ServerView> createServer(@CurrentSecurityContext SecurityContext context,
             @RequestBody ServerRequest req) {
         try {
-            var user = userDetailsService.getDetailsFromContext(securityContext).getUser();
+            var user = userDetailsService.getUserFromContext(context);
 
             var server = serverServ.createServer(user, req.name(), req.description());
 
@@ -166,15 +166,17 @@ public class ServerController {
     public ResponseEntity<ChannelView> createChannel(@CurrentSecurityContext SecurityContext context,
             @PathVariable("id") Long id, @RequestBody ChatChannelRequest req) {
         try {
-            var user = userDetailsService.getDetailsFromContext(context).getUser();
+            var user = userDetailsService.getUserFromContext(context);
 
             var channel = serverServ.createChannel(user, id, req.name());
             if (channel.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
+            logger.info("Created channel: " + channel);
 
             return new ResponseEntity<>(new ChannelView(channel.get()), HttpStatus.OK);
         } catch (Exception e) {
+            logger.error("Error creating channel", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -200,7 +202,7 @@ public class ServerController {
             if (maybeServer.isEmpty())
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             var server = maybeServer.get();
-            var user = userDetailsService.getDetailsFromContext(context).getUser();
+            var user = userDetailsService.getUserFromContext(context);
             server.getMembers().add(user);
 
             serverRepo.save(server);
@@ -220,7 +222,7 @@ public class ServerController {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            var user = userDetailsService.getDetailsFromContext(context).getUser();
+            var user = userDetailsService.getUserFromContext(context);
             var channel = maybeChannel.get();
             if (!channel.getServer().getMembers().contains(user)) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);

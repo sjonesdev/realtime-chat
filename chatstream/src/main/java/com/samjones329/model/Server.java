@@ -41,11 +41,11 @@ public class Server {
 
     private Date createdAt;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "default_channel_id")
     private Channel defaultChannel;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "owner_id")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
@@ -54,7 +54,7 @@ public class Server {
     @OneToMany(targetEntity = com.samjones329.model.Channel.class, cascade = CascadeType.ALL, mappedBy = "server")
     private Set<Channel> channels;
 
-    @ManyToMany(mappedBy = "joinedServers")
+    @ManyToMany(mappedBy = "joinedServers", cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private Set<User> members;

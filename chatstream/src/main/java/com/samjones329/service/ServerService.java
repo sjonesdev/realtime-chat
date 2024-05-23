@@ -73,14 +73,19 @@ public class ServerService {
 
     @Transactional
     public Optional<Channel> createChannel(User requester, Long serverId, String name) {
-        var server = serverRepo.findById(serverId);
-        if (server.isEmpty() || server.get().getOwner().getId() != requester.getId()) {
+        var serverOpt = serverRepo.findById(serverId);
+        if (serverOpt.isEmpty() || serverOpt.get().getOwner().getId() != requester.getId()) {
             return Optional.empty();
         }
 
-        var channel = channelRepo.save(new Channel(null, name, new Date(), server.get()));
+        var server = serverOpt.get();
+        var channel = channelRepo.save(new Channel(null, name, new Date(), server));
+
         kafkaAdmin.createOrModifyTopics(
                 TopicBuilder.name(KafkaConstants.KAFKA_TOPIC_BASE + "." + channel.getId().toString()).build());
+
+        server.getChannels().add(channel);
+        serverRepo.save(server);
 
         return Optional.of(channel);
     }

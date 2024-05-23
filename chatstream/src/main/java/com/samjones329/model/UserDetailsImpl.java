@@ -48,9 +48,10 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return true;// user.isEnabled();
     }
 
+    /** Detached user object, likely not up-to-date with database */
     public User getUser() {
         return user;
     }
