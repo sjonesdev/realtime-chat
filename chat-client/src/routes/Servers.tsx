@@ -27,7 +27,6 @@ export default function Servers() {
             return;
         }
 
-        console.log("params", params.serverId, params.channelId);
         if (!userStore.user || !params.serverId) {
             setServer(-1);
             setChannel(-1);
@@ -61,10 +60,6 @@ export default function Servers() {
                 `${userStore.user.joined_servers[server()].channels[i].id}` ===
                 params.channelId
             ) {
-                console.log(
-                    "set channel",
-                    userStore.user.joined_servers[server()].channels[i].id
-                );
                 setChannel(i);
             }
         }

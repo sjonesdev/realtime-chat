@@ -40,12 +40,10 @@ export default function MessagePanel() {
     const [chatContext, { setConnected }] = useContext(ChatContext);
 
     const server = createMemo(() => {
-        console.log("Server memo");
         if (!userStore.user || chatContext.serverIdx < 0) return;
         return userStore.user.joined_servers[chatContext.serverIdx];
     });
     const channel = createMemo(() => {
-        console.log("Channel memo");
         const s = server();
         if (!s || chatContext.channelIdx < 0) return;
         return s.channels[chatContext.channelIdx];
@@ -70,7 +68,6 @@ export default function MessagePanel() {
     createEffect(async () => {
         const c = channel();
         if (!c) return;
-        console.log(`Getting messages for channel{id=${c.id}}`);
         const messages = await fetchMessages(c.id);
         setMessages(messages);
         stompClient.deactivate();
