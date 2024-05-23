@@ -21,6 +21,7 @@ import { Message, fetchMessages } from "../lib/chat-api-client";
 import type { User } from "../lib/user-client";
 import { AuthContext } from "./auth-context";
 import { ChatContext } from "./chat-context";
+import { useNavigate } from "@solidjs/router";
 
 const parseMsg = (body: string): Message => {
     return JSON.parse(body);
@@ -36,7 +37,7 @@ export default function MessagePanel() {
         equals: false,
     });
     const [messageDraft, setMessageDraft] = createSignal("");
-    const [userStore] = useContext(AuthContext);
+    const [userStore, { checkAuth }] = useContext(AuthContext);
     const [chatContext, { setConnected }] = useContext(ChatContext);
 
     const server = createMemo(() => {
@@ -101,6 +102,7 @@ export default function MessagePanel() {
     });
 
     stompClient.onWebSocketError = (error) => {
+        checkAuth();
         setConnected(false);
         console.error(`Error with websocket`, error);
     };

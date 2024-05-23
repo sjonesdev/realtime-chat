@@ -1,6 +1,6 @@
 import { createContext } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
-import type { SelfUser } from "../lib/user-client";
+import { fetchAuth, type SelfUser } from "../lib/user-client";
 import { createStore, produce } from "solid-js/store";
 import { Channel, Server } from "../lib/chat-api-client";
 
@@ -8,6 +8,7 @@ type AuthContextType = [
     { user: SelfUser },
     {
         setUser: (user: SelfUser) => void;
+        checkAuth: () => void;
         addJoinedServer: (server: Server) => void;
         addOwnedServer: (server: Server) => void;
         addChannelToServer: (serverId: number, channel: Channel) => void;
@@ -17,6 +18,7 @@ export const AuthContext = createContext<AuthContextType>([
     { user: null },
     {
         setUser: (user) => {},
+        checkAuth: () => {},
         addJoinedServer: (server) => {},
         addOwnedServer: (server) => {},
         addChannelToServer: (serverId, channel) => {},
@@ -30,6 +32,9 @@ export function AuthProvider(props: { user: SelfUser; children: JSX.Element }) {
         store,
         {
             setUser: (user) => setStore("user", user),
+            checkAuth: () => {
+                fetchAuth().then((user) => setStore("user", user));
+            },
             addJoinedServer: (server: Server) =>
                 setStore(
                     "user",
