@@ -108,7 +108,7 @@ export default function MessagePanel() {
     };
     stompClient.onDisconnect = () => {
         setConnected(false);
-        console.error(`Websocket disconnected`);
+        console.debug(`Websocket disconnected`);
     };
     stompClient.onStompError = (frame) => {
         console.error("Broker reported error: " + frame.headers["message"]);

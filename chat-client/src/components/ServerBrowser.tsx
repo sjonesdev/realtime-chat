@@ -63,9 +63,6 @@ const ServerBrowser = () => {
                                 />
                                 <Button
                                     onClick={async (e) => {
-                                        console.debug(
-                                            `I want to join ${server.name} id=${server.id}`
-                                        );
                                         const res = await joinServer(server.id);
                                         if (res) addJoinedServer(server);
                                     }}
