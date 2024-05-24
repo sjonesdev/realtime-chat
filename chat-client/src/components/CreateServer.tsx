@@ -9,6 +9,7 @@ import Typography from "@suid/material/Typography";
 
 import { postServer } from "../lib/chat-api-client";
 import { AuthContext } from "./auth-context";
+import { HttpStatus } from "./helper-types";
 
 export default () => {
     const [newServerName, setNewServerName] = createSignal("");
@@ -16,7 +17,7 @@ export default () => {
     const [open, setOpen] = createSignal(false);
     const theme = useTheme();
     const [error, setError] = createSignal("");
-    const [_, { addOwnedServer }] = useContext(AuthContext);
+    const [_, { addOwnedServer, checkAuth }] = useContext(AuthContext);
 
     return (
         <>
@@ -34,16 +35,29 @@ export default () => {
                         e.preventDefault();
                         if (newServerName) {
                             postServer(newServerName(), newServerDesc())
-                                .then((val) => {
-                                    if (val) {
+                                .then(([val, status]) => {
+                                    if (status === HttpStatus.unauthorized) {
+                                        setError("Unauthorized, please log in");
+                                        checkAuth();
+                                    } else if (
+                                        status ===
+                                        HttpStatus.internalServerError
+                                    ) {
+                                        setError(
+                                            "We had a problem, please try again"
+                                        );
+                                    } else if (val) {
                                         console.debug(
                                             "New server created: ",
                                             val
                                         );
                                         addOwnedServer(val);
                                         setOpen(false);
+                                    } else {
+                                        setError(
+                                            "Unknown error, please try again"
+                                        );
                                     }
-                                    setError("Error making new server");
                                 })
                                 .catch((err) => {
                                     console.error(

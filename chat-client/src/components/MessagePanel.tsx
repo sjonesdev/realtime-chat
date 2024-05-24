@@ -3,7 +3,6 @@ import {
     createEffect,
     createMemo,
     createSignal,
-    onMount,
     useContext,
 } from "solid-js";
 import { Client } from "@stomp/stompjs";
@@ -21,7 +20,6 @@ import { Message, fetchMessages } from "../lib/chat-api-client";
 import type { User } from "../lib/user-client";
 import { AuthContext } from "./auth-context";
 import { ChatContext } from "./chat-context";
-import { useNavigate } from "@solidjs/router";
 
 const parseMsg = (body: string): Message => {
     return JSON.parse(body);
@@ -69,8 +67,10 @@ export default function MessagePanel() {
     createEffect(async () => {
         const c = channel();
         if (!c) return;
-        const messages = await fetchMessages(c.id);
-        setMessages(messages);
+        const [messages, status] = await fetchMessages(c.id);
+        if (status > 200)
+            console.warn(`Fetching messages got non-ok status ${status}`);
+        setMessages(messages ?? []);
         stompClient.deactivate();
         stompClient.onConnect = (frame) => {
             setConnected(true);

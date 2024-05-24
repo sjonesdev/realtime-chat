@@ -10,6 +10,7 @@ import { Show } from "solid-js";
 import { useContext } from "solid-js";
 import { AuthContext } from "../components/auth-context";
 import Link from "@suid/material/Link";
+import { HttpStatus } from "../components/helper-types";
 
 export default () => {
     const [email, setEmail] = createSignal("");
@@ -36,15 +37,19 @@ export default () => {
                 onSubmit={(e) => {
                     e.preventDefault();
                     login(email(), password())
-                        .then((val) => {
+                        .then(([val, status]) => {
                             console.debug("Login attempt: ", val);
-                            if (val != null) {
-                                setUser(val);
-                                navigate("/servers");
-                            } else {
+                            if (status === HttpStatus.internalServerError) {
+                                setError("We had a problem, please try again");
+                            } else if (status === HttpStatus.unauthorized) {
                                 setError(
                                     "Invalid credentials, please try again"
                                 );
+                            } else if (val) {
+                                setUser(val);
+                                navigate("/servers");
+                            } else {
+                                setError("Unknown error, please try again");
                             }
                         })
                         .catch((err) => {

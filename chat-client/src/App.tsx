@@ -14,7 +14,7 @@ import {
     Typography,
 } from "@suid/material";
 import AccountCircle from "@suid/icons-material/AccountCircle";
-import { useLocation, useNavigate } from "@solidjs/router";
+import { useLocation } from "@solidjs/router";
 import { APPBAR_HEIGHT } from "./lib/style-constants";
 import { logout } from "./lib/user-client";
 

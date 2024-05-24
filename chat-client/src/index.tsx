@@ -10,9 +10,14 @@ import { fetchAuth } from "./lib/user-client";
 import { AuthProvider } from "./components/auth-context";
 import { BODY_MARGIN } from "./lib/style-constants";
 import "./App.css";
+import { HttpStatus } from "./components/helper-types";
 
-const user = await fetchAuth();
-console.debug("User: ", user);
+let [user, status] = await fetchAuth();
+if (status === HttpStatus.internalServerError) {
+    // try once more if server error
+    [user, status] = await fetchAuth();
+}
+console.debug(`Got user with status : ${status}`, user);
 
 document.querySelector("body")!.style.margin = BODY_MARGIN;
 

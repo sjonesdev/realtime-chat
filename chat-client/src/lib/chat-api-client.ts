@@ -1,3 +1,4 @@
+import { AsyncHttpResult, HttpStatus } from "../components/helper-types";
 import { User } from "./user-client";
 
 const BASE_URL = "http://localhost:8080/api";
@@ -27,13 +28,14 @@ export interface Channel {
     created_at: string;
 }
 
-export async function fetchMessages(channelId: number): Promise<Message[]> {
-    return (
-        await fetch(`${BASE_URL}/channels/${channelId}/messages`, {
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-        })
-    ).json();
+export async function fetchMessages(
+    channelId: number
+): AsyncHttpResult<Message[]> {
+    const res = await fetch(`${BASE_URL}/channels/${channelId}/messages`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    return [res.ok ? await res.json() : null, res.status];
 }
 
 /** ids will be ignored if nameContaining exists */
@@ -43,24 +45,23 @@ export async function fetchServers({
 }: {
     nameContaining?: string;
     ids?: string[];
-}): Promise<Server[]> {
+}): AsyncHttpResult<Server[]> {
     const query = nameContaining
         ? `?name=${nameContaining}`
         : ids
         ? `?ids=${ids}`
         : "";
-    return (
-        await fetch(`${BASE_URL}/servers${query}`, {
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-        })
-    ).json();
+    const res = await fetch(`${BASE_URL}/servers${query}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    return [res.ok ? await res.json() : null, res.status];
 }
 
 export async function postServer(
     name: string,
     description: string
-): Promise<Server | null> {
+): AsyncHttpResult<Server> {
     const res = await fetch(`${BASE_URL}/servers`, {
         method: "post",
         headers: { "Content-Type": "application/json" },
@@ -70,28 +71,27 @@ export async function postServer(
             description,
         }),
     });
-    if (!res.ok) return null;
-    return res.json();
+    return [res.ok ? await res.json() : null, res.status];
 }
 
-/** Returns true if successfully joined, false otherwise */
-export async function joinServer(serverId: number): Promise<boolean> {
+export async function joinServer(serverId: number): Promise<HttpStatus> {
     const res = await fetch(`${BASE_URL}/servers/${serverId}/join`, {
         method: "post",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
     });
-    if (res.ok) return true;
-    return false;
+    return res.status;
 }
 
-export async function postChannel(serverId: number, name: string) {
+export async function postChannel(
+    serverId: number,
+    name: string
+): AsyncHttpResult<Channel> {
     const res = await fetch(`${BASE_URL}/servers/${serverId}/channels`, {
         method: "post",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
     });
-    if (!res.ok) return null;
-    return res.json();
+    return [res.ok ? await res.json() : null, res.status];
 }

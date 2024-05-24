@@ -31,11 +31,15 @@ const ServerBrowser = () => {
                 component="form"
                 onSubmit={async (e) => {
                     e.preventDefault();
-                    const servers = await fetchServers({
+                    const [servers, status] = await fetchServers({
                         nameContaining: query(),
                     });
+                    if (status > 200)
+                        console.warn(
+                            `Fetching servers gave non-ok status ${status}`
+                        );
                     console.debug(`Search results for ${query()}: `, servers);
-                    setServers(servers);
+                    setServers(servers ?? []);
                 }}
                 direction="row"
             >
