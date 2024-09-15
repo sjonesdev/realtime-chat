@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.Date;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -42,6 +43,9 @@ public class User {
     private boolean enabled;
 
     private Date createdAt;
+
+    @Column(length = 64)
+    private String verificationCode;
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude

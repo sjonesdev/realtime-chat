@@ -1,9 +1,7 @@
 package com.samjones329.controller;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.samjones329.model.User;
 import com.samjones329.repository.UserRepo;
 import com.samjones329.service.UserDetailsServiceImpl;
+import com.samjones329.service.UserService;
 import com.samjones329.view.UserSelfView;
 import com.samjones329.view.UserView;
 
@@ -56,6 +54,9 @@ public class UserController {
     @Autowired
     SecurityContextRepository securityContextRepository;
 
+    @Autowired
+    UserService userServ;
+
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/register")
@@ -67,15 +68,9 @@ public class UserController {
             var existingUsername = userRepo.findByUsername(req.username());
             if (existingUsername.isPresent())
                 return new ResponseEntity<>(HttpStatus.CONFLICT);
-            String encodedPassword = passwordEncoder.encode(req.password);
-            var user = new User(null, req.username(), req.email(), encodedPassword, false, new Date(), Set.of(),
-                    Set.of());
-            user = userRepo.save(user);
 
-            var owned = new ArrayList<Long>();
-            for (var server : user.getOwnedServers()) {
-                owned.add(server.getId());
-            }
+            var user = userServ.register(req.email(), req.username(), req.password());
+
             return new ResponseEntity<>(
                     new UserSelfView(user),
                     HttpStatus.OK);
@@ -179,4 +174,23 @@ public class UserController {
         }
     }
 
+    public record VerifyRequest(String username, String verificationCode) {
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<HttpStatus> verifyUser(@PathVariable Long id, @RequestBody VerifyRequest req) {
+        try {
+            var user = userServ.verify(id, req.verificationCode);
+            if (user == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            } else if (!user.isEnabled()) {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Error verifying user with id " + id, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

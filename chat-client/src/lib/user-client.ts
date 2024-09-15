@@ -75,3 +75,16 @@ export async function fetchAuth(): AsyncHttpResult<SelfUser | null> {
     });
     return [res.ok ? await res.json() : null, res.status];
 }
+
+export async function verify(
+    username: string,
+    verificationCode: string
+): Promise<HttpStatus> {
+    const res = await fetch(`${BASE_URL}/verify`, {
+        credentials: "include",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, verificationCode }),
+    });
+    return res.status;
+}

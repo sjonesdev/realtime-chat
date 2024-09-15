@@ -12,7 +12,7 @@ import { AuthContext } from "../components/auth-context";
 import Link from "@suid/material/Link";
 import { HttpStatus } from "../components/helper-types";
 
-export default () => {
+const Login = () => {
     const [email, setEmail] = createSignal("");
     const [password, setPassword] = createSignal("");
     const [error, setError] = createSignal<null | string>(null);
@@ -85,3 +85,5 @@ export default () => {
         </Stack>
     );
 };
+
+export default Login;

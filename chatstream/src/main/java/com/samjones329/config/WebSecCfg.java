@@ -38,7 +38,7 @@ public class WebSecCfg {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .securityContext(context -> context.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/register", "/login").permitAll()
+                        .requestMatchers("/", "/register", "/login", "/verify").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(
                         ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));

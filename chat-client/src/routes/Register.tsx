@@ -9,7 +9,7 @@ import { useNavigate } from "@solidjs/router";
 import { AuthContext } from "../components/auth-context";
 import Link from "@suid/material/Link";
 
-export default () => {
+const Register = () => {
     const [email, setEmail] = createSignal("");
     const [username, setUsername] = createSignal("");
     const [password, setPassword] = createSignal("");
@@ -87,3 +87,5 @@ export default () => {
         </Stack>
     );
 };
+
+export default Register;

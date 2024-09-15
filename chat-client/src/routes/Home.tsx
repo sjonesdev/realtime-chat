@@ -4,7 +4,7 @@ import Typography from "@suid/material/Typography";
 import { Show, useContext } from "solid-js";
 import { AuthContext } from "../components/auth-context";
 
-export default () => {
+const Home = () => {
     const [userState] = useContext(AuthContext);
     return (
         <Stack alignItems="center" gap={2} marginY={4}>
@@ -39,3 +39,5 @@ export default () => {
         </Stack>
     );
 };
+
+export default Home;

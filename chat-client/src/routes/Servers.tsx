@@ -12,7 +12,7 @@ import ServersHeader from "../components/ServersHeader";
 import ServersDetails from "../components/ServersDetails";
 import ServerSideBar from "../components/ServerSideBar";
 
-export default function Servers() {
+const Servers = () => {
     const [userStore] = useContext(AuthContext);
     const navigate = useNavigate();
     const params = useParams<{ serverId?: string; channelId?: string }>();
@@ -84,4 +84,6 @@ export default function Servers() {
             </Box>
         </ChatContextProvider>
     );
-}
+};
+
+export default Servers;

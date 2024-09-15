@@ -11,6 +11,7 @@ import { AuthProvider } from "./components/auth-context";
 import { BODY_MARGIN } from "./lib/style-constants";
 import "./App.css";
 import { HttpStatus } from "./components/helper-types";
+import Verify from "./routes/Verify";
 
 let [user, status] = await fetchAuth();
 if (status === HttpStatus.internalServerError) {
@@ -32,6 +33,7 @@ render(
                     path="/servers/:serverId?/:channelId?"
                     component={Servers}
                 />
+                <Route path="/verify" component={Verify}
             </Router>
         </AuthProvider>
     ),
